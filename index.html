@@ -304,7 +304,7 @@ function doPost(e) {
 /* Koppeling die in deze kopie van de app is ingebakken (via 'App voor de Chromebooks'). */
 const BAKED = /*BAKED-START*/{"url":"","classKey":""}/*BAKED-END*/;
 const APP_SOURCE = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-const APP_VERSION = "2026-10-29 · v5";
+const APP_VERSION = "2026-10-29 · v6";
 const STORE_KEY = "leesapp-v1";
 const COLORS = ["#2E7D8A","#E07B39","#7B4FA0","#2E8B57","#C0392B","#B7791F","#3B6FB6","#8A6D3B"];
 
@@ -338,7 +338,7 @@ function defaultState(){
   return {
     version:1,
     settings:{pin:"1234",sessionMin:25,lang:"nl-BE",voiceURI:"",rate:0.85,autoCheck:true,record:true,fontSize:28,syncUrl:"",classKey:"",teacherKey:""},
-    normen:{beheerst:0.97,frustratie:0.93,tempoFactor:0.70,levels:JSON.parse(JSON.stringify(DEFAULT_LEVELS))},
+    normen:{beheerst:0.97,frustratie:0.93,tempoFactor:0.70,insCount:true,levels:JSON.parse(JSON.stringify(DEFAULT_LEVELS))},
     tips:JSON.parse(JSON.stringify(DEFAULT_TIPS)),
     students:[1,2,3,4].map(i=>({id:"s"+i,code:"L"+i,naam:"Leerling "+i,streef:"M5",assigned:["t-fiets"],color:COLORS[i-1]})),
     texts:JSON.parse(JSON.stringify(DEFAULT_TEXTS)),
@@ -455,29 +455,61 @@ function levelIdx(lv){ return state.normen.levels.findIndex(l=>l.lv===lv); }
 function tipById(id){ return state.tips.find(t=>t.id===id); }
 function tipName(id){ const t=tipById(id); return t?t.name:""; }
 
-/* ---------------- Berekeningen (zelfde regels als de Leesvolger) ---------------- */
+/* ---------------- Berekeningen ----------------
+   Zoals bij een AVI-afname krijgen TIJD en FOUTEN elk een eigen oordeel
+   (B = beheersing, I = instructie, F = frustratie). Het zwakste oordeel bepaalt het resultaat:
+              fouten B   fouten I   fouten F
+     tijd B      B          I          F
+     tijd I      I          I          F
+     tijd F      F          F          F
+   Grenswaarden: per tekst (seconden en aantal fouten, zoals op een scoreformulier) als de
+   leerkracht die ingaf; anders de richtwaarden (woorden per minuut en % juist) bij 'Normen'. */
+const RNAME = {B:"Beheerst", I:"Instructie", F:"Frustratie"};
+const RANK = {B:0, I:1, F:2};
 function beurtCounts(b){
+  const insCount = state.normen.insCount!==false;
   if(b.marks && b.marks.length){
     let fout=0, over=0, zc=0;
     b.marks.forEach(m=>{ if(m==="fout") fout++; else if(m==="overgeslagen") over++; else if(m==="zelfcorrectie") zc++; });
-    return {errors: fout+over+(+b.insertions||0), selfCorr: zc, fout, over, ins:(+b.insertions||0)};
+    const ins = +b.insertions||0;
+    return {errors: fout+over+(insCount?ins:0), selfCorr: zc, fout, over, ins};
   }
   return {errors:+b.errors||0, selfCorr:+b.selfCorr||0, fout:+b.errors||0, over:0, ins:0};
 }
+function validNorms(n){ return n && [n.tB,n.tI,n.fB,n.fI].every(x=>x!==""&&x!=null&&!isNaN(+x)) ? {tB:+n.tB,tI:+n.tI,fB:+n.fB,fI:+n.fI} : null; }
+function normsFor(b){ const t=textById(b.textId); return validNorms(t && t.norms) || validNorms(b.normsSnap); }
 function metrics(b){
   const {errors,selfCorr} = beurtCounts(b);
   const words = +b.words||0, sec = +b.seconds||0;
   const wcpm = (words && sec>0) ? Math.round((words-errors)/(sec/60)) : null;
+  const wpm = (words && sec>0) ? Math.round(words/(sec/60)) : null;
   const acc = words ? (words-errors)/words : null;
-  return {errors,selfCorr,wcpm,acc,result:classify(acc,wcpm,b.level)};
+  const J = judge(b, {sec, errors, wpm, acc});
+  return {errors,selfCorr,wcpm,wpm,acc,tijd:J.tijd,fouten:J.fouten,result:J.result,basis:J.basis};
 }
-function classify(acc,wcpm,level){
-  if(acc==null||wcpm==null||levelIdx(level)<0) return "";
-  const N=state.normen, tempo=N.levels[levelIdx(level)].tempo;
-  if(acc>=N.beheerst && wcpm>=tempo) return "Beheerst";
-  if(acc<N.frustratie || wcpm<N.tempoFactor*tempo) return "Frustratie";
-  return "Instructie";
+function judge(b, {sec, errors, wpm, acc}){
+  const empty = {tijd:"",fouten:"",result:"",basis:""};
+  if(!(sec>0) || !(+b.words)) return empty;
+  let tijd, fouten, basis;
+  const n = normsFor(b);
+  if(n){
+    tijd = sec<=n.tB ? "B" : (sec<=n.tI ? "I" : "F");
+    fouten = errors<=n.fB ? "B" : (errors<=n.fI ? "I" : "F");
+    basis = "tekst";
+  } else {
+    const li = levelIdx(b.level); if(li<0) return empty;
+    const N = state.normen, tempo = N.levels[li].tempo;
+    tijd = wpm>=tempo ? "B" : (wpm>=N.tempoFactor*tempo ? "I" : "F");
+    fouten = acc>=N.beheerst ? "B" : (acc>=N.frustratie ? "I" : "F");
+    basis = "richtwaarde";
+  }
+  const worst = RANK[tijd]>=RANK[fouten] ? tijd : fouten;
+  return {tijd, fouten, result:RNAME[worst], basis};
 }
+function classify(acc,wcpm,level){ // (oude aanroep, voor testen) – tempo hier als woorden/min
+  return judge({words:100,level},{sec:60,errors:0,wpm:wcpm,acc}).result;
+}
+function partsHTML(m){ return m.tijd? `<span class="small muted" style="white-space:nowrap">tijd ${m.tijd} · fouten ${m.fouten}</span>` : ""; }
 function beurtenVan(sid){ return state.beurten.filter(b=>b.studentId===sid).sort((a,b)=>a.ts-b.ts); }
 function summary(s){
   // Beurten die niet automatisch nagekeken konden worden, tellen pas mee na controle door de leerkracht.
@@ -782,7 +814,7 @@ function cellSafe(x){ const v = x==null? "" : x; return (typeof v==="string" && 
 function beurtRow(b){
   const s=student(b.studentId)||{}; const c=beurtCounts(b); const m=metrics(b);
   return [fmtDate(b.ts), s.code||"", b.title, b.level, b.words, Math.floor(b.seconds/60), b.seconds%60, c.errors, c.selfCorr,
-    tipName(b.st1), tipName(b.st2), b.probleem||"", b.opmerking||"", m.wcpm==null?"":m.wcpm, m.acc==null?"":m.acc, m.result,
+    tipName(b.st1), tipName(b.st2), b.probleem||"", b.opmerking||"", m.wcpm==null?"":m.wcpm, m.acc==null?"":m.acc, m.result? `${m.result} (tijd ${m.tijd} · fouten ${m.fouten}${m.basis==="tekst"?" · grenswaarden tekst":""})` : "",
     b.checked?"nagekeken":"te controleren", s.naam||""].map(cellSafe);
 }
 function updateSyncBadge(){
@@ -1075,9 +1107,41 @@ async function echoStep(again){
   if(run!==ttsRun) return;
   view.phase="echo-you"; render(); hlSentence(s);
 }
+/* Leestijd zoals bij een AVI-afname: van het eerste tot het laatste gesproken woord.
+   We meten het geluidsniveau; tijdens het aftellen bepalen we het achtergrondgeluid. */
+function speechSpan(samples, floor){
+  // samples: [{t (ms sinds start lezen), rms}] ; geeft {start,end} in ms of null
+  const thr = Math.max(0.02, (floor||0)*2.5);
+  let first=null, last=null, run=0;
+  for(const x of samples){
+    if(x.t<0) continue;
+    if(x.rms>thr){ run++; if(run>=3 && first==null) first = Math.max(0, x.t-100); if(run>=2) last = x.t; }
+    else run=0;
+  }
+  return (first!=null && last!=null && last-first>=2000) ? {start:first, end:last} : null;
+}
+function startVAD(){
+  if(!micLive()) return null;
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC();
+    const an = ac.createAnalyser(); an.fftSize = 1024; ac.createMediaStreamSource(micStream).connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    const V = {ac, floorSamples:[], samples:[], t0:null};
+    V.timer = setInterval(()=>{
+      an.getByteTimeDomainData(buf); let sum=0; for(let i=0;i<buf.length;i++){ const v=(buf[i]-128)/128; sum+=v*v; }
+      const rms = Math.sqrt(sum/buf.length);
+      if(V.t0==null) V.floorSamples.push(rms); else V.samples.push({t:performance.now()-V.t0, rms});
+    }, 50);
+    V.stop = ()=>{ clearInterval(V.timer); try{ ac.close(); }catch(e){} };
+    V.floor = ()=>{ const a=V.floorSamples.slice().sort((x,y)=>x-y); return a.length? a[Math.floor(a.length/2)] : 0; };
+    return V;
+  }catch(e){ return null; }
+}
 async function readStart(){
   stopSpeak(); ttsRun++;
   reading = {sid:view.sid, tid:view.tid, warn:""};
+  if(needsMic()){ try{ await getMic(); }catch(e){} }
+  reading.vad = startVAD();
   view.phase="countdown"; render();
   for(const n of ["3…","2…","1…","Lezen maar! 🎤"]){ const el=$("#countdown"); if(el) el.textContent = n==="Lezen maar! 🎤"? n : "Klaar? "+n; await new Promise(r=>setTimeout(r,700)); }
   if(!reading) return;
@@ -1088,17 +1152,25 @@ async function readStart(){
   }
   if(state.settings.record && !reading.rec) reading.warn = (reading.warn? reading.warn+" ":"") + "De microfoon werkt niet (toestemming gegeven?). De tijd wordt wel gemeten.";
   reading.start = performance.now(); reading.startTs = Date.now();
+  if(reading.vad) reading.vad.t0 = reading.start;
   view.phase="reading"; render();
 }
 async function readCancel(){
   if(!reading) return;
   if(reading.listen && reading.listen.stop) reading.listen.stop();
   if(reading.rec) reading.rec.cancel();
+  if(reading.vad) reading.vad.stop();
   reading=null; view.phase="idle"; render();
 }
 async function readDone(){
   if(!reading) return;
-  const seconds = Math.round((performance.now()-reading.start)/1000);
+  const secondsButton = Math.round((performance.now()-reading.start)/1000);
+  let seconds = secondsButton, timeMethod = "knoppen";
+  if(reading.vad){
+    reading.vad.stop();
+    const sp = speechSpan(reading.vad.samples, reading.vad.floor());
+    if(sp){ seconds = Math.max(1, Math.round((sp.end-sp.start)/1000)); timeMethod = "stem"; }
+  }
   view.phase="saving"; render();
   const [ctl, blob] = await Promise.all([
     reading.listen? reading.listen.stop() : Promise.resolve(null),
@@ -1106,7 +1178,7 @@ async function readDone(){
   ]);
   const t = textById(reading.tid), ws = wordsOf(t.body);
   const b = {id:uid(), studentId:reading.sid, textId:t.id, title:t.title, level:t.level, words:ws.length, bodySnapshot:t.body,
-    seconds, ts:reading.startTs, method:"app", checked:false, st1:"", st2:"", probleem:"", opmerking:"", insertions:0, repetitions:0,
+    seconds, secondsButton, timeMethod, normsSnap: t.norms||null, ts:reading.startTs, method:"app", checked:false, st1:"", st2:"", probleem:"", opmerking:"", insertions:0, repetitions:0,
     marks:null, transcript:"", asrError:"", hasAudio:false};
   if(ctl){
     const transcript = ctl.finals.join(" ").trim();
@@ -1218,7 +1290,7 @@ function spark(vals){
 }
 function tOverzicht(){
   const unchecked = state.beurten.filter(b=>!b.checked).length;
-  return `${unchecked?`<div class="banner">Er ${unchecked===1?"is 1 leesbeurt":"zijn "+unchecked+" leesbeurten"} nog niet door jou nagekeken. De cijfers hieronder tellen ze al mee. <button class="btn small" data-a="tab" data-tab="beurten">Nakijken</button></div>`:""}
+  return `<p class="small muted" style="margin-top:-6px">Resultaten zijn indicatief (oefenteksten, geen officiële AVI-afname). Oordeel = zwakste van tijd en fouten.</p>${unchecked?`<div class="banner">Er ${unchecked===1?"is 1 leesbeurt":"zijn "+unchecked+" leesbeurten"} nog niet door jou nagekeken. De cijfers hieronder tellen ze al mee. <button class="btn small" data-a="tab" data-tab="beurten">Nakijken</button></div>`:""}
   <div class="studentcards">${state.students.map(s=>{
     const S = summary(s); const pt = practiceToday(s.id); const total=(state.settings.sessionMin||25)*60;
     return `<div class="scard">
@@ -1229,7 +1301,7 @@ function tOverzicht(){
         <span>Aantal beurten</span><span>${S.n}</span>
         <span>Laatste beurt</span><span>${fmtDate(S.last.ts)}</span>
         <span>Laatst gelezen niveau</span><span>${esc(S.last.level)}</span>
-        <span>Laatste resultaat</span><span><span class="pill ${S.lastM.result}">${S.lastM.result||"–"}</span></span>
+        <span>Laatste resultaat</span><span><span class="pill ${S.lastM.result}">${S.lastM.result||"–"}</span><br>${partsHTML(S.lastM)}</span>
         <span>Gem. nauwkeurigheid</span><span>${pct(S.avgAcc)}</span>
         <span>Gem. woorden correct/min</span><span>${S.avgW??"–"}</span>
         <span>Hoogste beheerste niveau</span><span>${esc(S.highest)}</span>
@@ -1244,7 +1316,7 @@ function tOverzicht(){
   <div class="tablewrap"><table>
     <tr><th>Code</th><th>Naam</th><th>Streef</th><th class="num">Beurten</th><th>Laatste beurt</th><th>Laatst niveau</th><th>Laatste resultaat</th><th class="num">Gem. nauwk.</th><th class="num">Gem. wcpm</th><th>Hoogste beheerst</th><th>Bereikt?</th><th>Grootste struikelpunt</th><th>Advies</th></tr>
     ${state.students.map(s=>{ const S=summary(s); return `<tr><td>${esc(s.code)}</td><td>${esc(s.naam)}</td><td>${esc(s.streef)}</td><td class="num">${S.n}</td>
-      <td>${S.n?fmtDate(S.last.ts):""}</td><td>${S.n?esc(S.last.level):""}</td><td>${S.n?`<span class="pill ${S.lastM.result}">${S.lastM.result}</span>`:""}</td>
+      <td>${S.n?fmtDate(S.last.ts):""}</td><td>${S.n?esc(S.last.level):""}</td><td>${S.n?`<span class="pill ${S.lastM.result}">${S.lastM.result}</span><br>${partsHTML(S.lastM)}`:""}</td>
       <td class="num">${S.n?pct(S.avgAcc):""}</td><td class="num">${S.n?(S.avgW??""):""}</td><td>${S.n?esc(S.highest):""}</td><td>${S.n?S.reached:""}</td>
       <td>${S.n?(S.top==="-"?"–":esc(tipName(S.top))):""}</td><td>${S.n?esc(S.advies):""}</td></tr>`;}).join("")}
   </table></div>`;
@@ -1259,7 +1331,7 @@ function tBeurten(){
     <tr><th>Datum</th><th>Leerling</th><th>Tekst</th><th>Niveau</th><th class="num">Woorden</th><th class="num">Tijd</th><th class="num">Fouten</th><th class="num">Zelfcorr.</th><th class="num">Wcpm</th><th class="num">Nauwk.</th><th>Resultaat</th><th>Struikelpunten</th><th>Status</th><th></th></tr>
     ${bs.map(b=>{ const m=metrics(b), s=student(b.studentId); return `<tr>
       <td>${fmtDateTime(b.ts)}</td><td>${esc(s?s.naam:"?")}</td><td>${esc(b.title)}</td><td>${esc(b.level)}</td><td class="num">${b.words}</td><td class="num">${fmtSec(b.seconds)}</td>
-      <td class="num">${m.errors}</td><td class="num">${m.selfCorr}</td><td class="num">${m.wcpm??""}</td><td class="num">${pct(m.acc)}</td><td><span class="pill ${m.result}">${m.result}</span></td>
+      <td class="num">${m.errors}</td><td class="num">${m.selfCorr}</td><td class="num">${m.wcpm??""}</td><td class="num">${pct(m.acc)}</td><td><span class="pill ${m.result}">${m.result}</span><br>${partsHTML(m)}</td>
       <td class="small">${esc([tipName(b.st1),tipName(b.st2)].filter(Boolean).join(" · "))}</td>
       <td>${b.checked?`<span class="pill ok">nagekeken</span>`:`<span class="pill warn">${b.autoFailed?"zelf nakijken":"te controleren"}</span>`}${b.method==="handmatig"?` <span class="pill">handmatig</span>`:""}</td>
       <td><button class="btn small" data-a="review" data-id="${b.id}">${b.checked?"Bekijk":"Nakijken"}</button></td></tr>`;}).join("")}
@@ -1268,7 +1340,7 @@ function tBeurten(){
 function tTeksten(){
   return `<div class="row" style="margin-bottom:14px"><div class="muted">Teksten die je hier toevoegt, kan je bij <b>Leerlingen</b> toewijzen.</div><div class="spacer"></div><button class="btn" data-a="text-new">＋ Nieuwe tekst</button></div>
   <div class="tablewrap"><table><tr><th>Titel</th><th>AVI-niveau</th><th class="num">Woorden</th><th>Bron</th><th>Toegewezen aan</th><th></th></tr>
-  ${state.texts.map(t=>`<tr><td><b>${esc(t.title)}</b><div class="small muted">${esc(t.body.slice(0,90))}…</div></td><td>${esc(t.level)}</td><td class="num">${wordsOf(t.body).length}</td><td>${esc(t.source||"")}</td>
+  ${state.texts.map(t=>`<tr><td><b>${esc(t.title)}</b><div class="small muted">${esc(t.body.slice(0,90))}…</div></td><td>${esc(t.level)}${validNorms(t.norms)?`<br><span class="pill ok" style="font-size:11px">eigen grenswaarden</span>`:""}</td><td class="num">${wordsOf(t.body).length}</td><td>${esc(t.source||"")}</td>
     <td class="small">${esc(state.students.filter(s=>s.assigned.includes(t.id)).map(s=>s.naam).join(", ")||"–")}</td>
     <td><button class="btn small light" data-a="text-edit" data-id="${t.id}">Bewerk</button></td></tr>`).join("")}</table></div>`;
 }
@@ -1281,6 +1353,14 @@ function textForm(t){
   </div>
   <label class="f" style="margin-top:12px">Tekst (plak of typ)<textarea id="tf-body" rows="12" style="font-size:17px;line-height:1.6">${esc(t.body||"")}</textarea></label>
   <div class="muted small" id="tf-count" style="margin-top:6px">${wordsOf(t.body||"").length} woorden</div>
+  <details style="margin-top:12px" ${validNorms(t.norms)?"open":""}><summary><b>Grenswaarden voor deze tekst</b> <span class="small muted">(optioneel – zoals op een scoreformulier)</span></summary>
+    <p class="small muted">Vul je dit in, dan beoordeelt de app deze tekst op <b>leestijd in seconden</b> en <b>aantal fouten</b>, elk apart; het zwakste oordeel telt. Laat je het leeg, dan gebruikt de app de richtwaarden bij Normen.</p>
+    <div class="formgrid">
+      <label class="f">Tijd: beheersing t/m (sec)<input type="number" min="1" id="tf-tB" value="${esc(t.norms?.tB??"")}"></label>
+      <label class="f">Tijd: instructie t/m (sec)<input type="number" min="1" id="tf-tI" value="${esc(t.norms?.tI??"")}"></label>
+      <label class="f">Fouten: beheersing t/m<input type="number" min="0" id="tf-fB" value="${esc(t.norms?.fB??"")}"></label>
+      <label class="f">Fouten: instructie t/m<input type="number" min="0" id="tf-fI" value="${esc(t.norms?.fI??"")}"></label>
+    </div><p class="small muted">Meer seconden of fouten dan de instructiegrens = frustratie.</p></details>
   <div style="margin-top:12px"><div class="small muted" style="margin-bottom:6px">Toewijzen aan:</div><div class="row">${state.students.map(s=>`<label class="row small" style="gap:6px"><input type="checkbox" class="tf-as" value="${s.id}" ${t.id&&s.assigned.includes(t.id)?"checked":""}> ${esc(s.naam)}</label>`).join("")}</div></div>
   <div class="row" style="margin-top:20px">${t.id?`<button class="btn red" data-a="text-del" data-id="${t.id}">Verwijder</button>`:""}<div class="spacer"></div>
     <button class="btn ghost" data-a="modal-close">Annuleer</button><button class="btn" data-a="text-save" data-id="${t.id||""}">Bewaar</button></div>`;
@@ -1309,17 +1389,25 @@ function tStruikel(){
 }
 function tNormen(){
   const N=state.normen;
-  return `<div class="banner">De richttempo's zijn indicatieve startwaarden, <b>geen officiële AVI-normen</b>. Pas ze aan aan je ervaring of de afspraken van je school.</div>
-  <div class="card"><h3 style="margin-top:0">Beslisregels</h3>
-    <div class="formgrid">
-      <label class="f">Min. nauwkeurigheid voor 'Beheerst' (%)<input type="number" step="0.5" min="50" max="100" data-norm="beheerst" value="${(N.beheerst*100).toFixed(1).replace(/\.0$/,"")}"></label>
-      <label class="f">Onder deze nauwkeurigheid = 'Frustratie' (%)<input type="number" step="0.5" min="50" max="100" data-norm="frustratie" value="${(N.frustratie*100).toFixed(1).replace(/\.0$/,"")}"></label>
-      <label class="f">Tempo-ondergrens 'Frustratie' (% van richttempo)<input type="number" step="5" min="10" max="100" data-norm="tempoFactor" value="${Math.round(N.tempoFactor*100)}"></label>
-    </div>
-    <p class="small muted">Beheerst = nauwkeurigheid ≥ grens én tempo ≥ richttempo. Frustratie = nauwkeurigheid onder de ondergrens of tempo onder ${Math.round(N.tempoFactor*100)}% van het richttempo. Al de rest = Instructie.<br>
-    Fouten = verkeerd gelezen + overgeslagen + toegevoegde woorden. Zelfcorrecties en herhalingen tellen niet als fout.</p>
+  return `<div class="banner">De app beoordeelt zoals bij een AVI-afname: <b>leestijd</b> en <b>fouten</b> krijgen elk een eigen oordeel (B = beheersing, I = instructie, F = frustratie) en <b>het zwakste oordeel bepaalt het resultaat</b>. Weinig fouten compenseren geen trage leestijd, en snel lezen compenseert geen fouten.<br>
+    De resultaten blijven <b>indicatief</b>: een officieel AVI-niveau bepaal je met de officiële AVI-kaarten en scoreformulieren.</div>
+  <div class="card"><h3 style="margin-top:0">Zo combineert de app de oordelen</h3>
+    <div class="tablewrap" style="max-width:460px"><table><tr><th>Tijd ↓ / Fouten →</th><th>B</th><th>I</th><th>F</th></tr>
+      <tr><th>B</th><td>B</td><td>I</td><td>F</td></tr><tr><th>I</th><td>I</td><td>I</td><td>F</td></tr><tr><th>F</th><td>F</td><td>F</td><td>F</td></tr></table></div>
+    <p class="small muted" style="margin-top:10px"><b>Grenswaarden:</b> heeft een tekst eigen grenswaarden (seconden en aantal fouten, in te vullen bij Teksten), dan gebruikt de app die. Anders gebruikt hij de richtwaarden hieronder. Die zijn door mij als startpunt gekozen en zijn <b>geen officiële AVI-normen</b>.<br>
+    <b>Leestijd</b> loopt van het eerste tot het laatste gesproken woord (gemeten via de microfoon; lukt dat niet, dan van start tot "klaar").</p>
   </div>
-  <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Richttempo per AVI-niveau (woorden correct per minuut)</h3>
+  <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Richtwaarden (als een tekst geen eigen grenswaarden heeft)</h3>
+    <div class="formgrid">
+      <label class="f">Fouten: beheersing vanaf (% juist)<input type="number" step="0.5" min="50" max="100" data-norm="beheerst" value="${(N.beheerst*100).toFixed(1).replace(/\.0$/,"")}"></label>
+      <label class="f">Fouten: instructie vanaf (% juist)<input type="number" step="0.5" min="50" max="100" data-norm="frustratie" value="${(N.frustratie*100).toFixed(1).replace(/\.0$/,"")}"></label>
+      <label class="f">Tijd: instructie vanaf (% van richttempo)<input type="number" step="5" min="10" max="100" data-norm="tempoFactor" value="${Math.round(N.tempoFactor*100)}"></label>
+    </div>
+    <p class="small muted"><b>Oordeel tijd:</b> B als het kind minstens het richttempo haalt (woorden per minuut), I vanaf ${Math.round(N.tempoFactor*100)}% daarvan, anders F.<br>
+    <b>Oordeel fouten:</b> B vanaf ${(N.beheerst*100).toFixed(1).replace(/\.0$/,"")}% juist gelezen woorden, I vanaf ${(N.frustratie*100).toFixed(1).replace(/\.0$/,"")}%, anders F.</p>
+    <label class="row" style="gap:8px;flex-wrap:nowrap;margin-top:6px"><input type="checkbox" data-norm-ins ${N.insCount!==false?"checked":""}> Toegevoegde woorden tellen als fout <span class="small muted">(verkeerd gelezen en overgeslagen woorden tellen altijd; herhalingen en zelfcorrecties nooit)</span></label>
+  </div>
+  <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Richttempo per AVI-niveau (woorden per minuut, voor het oordeel tijd)</h3>
     <div class="formgrid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">${N.levels.map((l,i)=>`<label class="f">${l.lv} <span class="small">${esc(l.moment)}</span><input type="number" min="1" data-tempo="${i}" value="${l.tempo}"></label>`).join("")}</div>
   </div>
   <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Struikelpunten en remediëringstips</h3>
@@ -1427,7 +1515,7 @@ function openReview(id){
 function newManual(){
   const s = state.students[0]; const t = state.texts[0];
   reviewDraft = {id:uid(), studentId:s?s.id:"", textId:t?t.id:"", title:t?t.title:"", level:t?t.level:"M5", words:t?wordsOf(t.body).length:0,
-    seconds:0, ts:Date.now(), method:"handmatig", checked:true, errors:0, selfCorr:0, st1:"", st2:"", probleem:"", opmerking:"", marks:null, isNew:true};
+    seconds:0, ts:Date.now(), method:"handmatig", checked:true, errors:0, selfCorr:0, st1:"", st2:"", probleem:"", opmerking:"", marks:null, isNew:true, normsSnap:t?(t.norms||null):null};
   renderReview();
 }
 function renderReview(){
@@ -1450,10 +1538,18 @@ function renderReview(){
       <div class="hidden"><audio id="rv-audio" controls style="width:100%"></audio></div>
       <p class="small muted hidden" id="rv-noaudio">Geen opname op dit toestel (de opname blijft op de Chromebook waarop gelezen werd).</p>
       ${b.autoFailed?`<div class="banner">Automatisch nakijken lukte niet${b.asrError?` (${esc(b.asrError)})`:""}. Beluister de opname en tik zelf de fouten aan.</div>`:`<div class="banner">Dit is een <b>voorstel</b> van de spraakherkenning. Beluister de opname en tik op een woord om het te verbeteren.</div>`}
+      <details class="small" style="margin:8px 0"><summary><b>Wat telt als fout?</b></summary>
+        <ul style="margin:6px 0 0 18px;line-height:1.6">
+          <li><b>Fout:</b> woord verkeerd gelezen of verkeerd uitgesproken. Een verschil in <i>klemtoon</i> is geen fout.</li>
+          <li><b>Spellend gelezen</b> en daarna niet juist uitgesproken = <b>fout</b>. Daarna wél juist uitgesproken = <b>zelfcorrectie</b> (geen fout).</li>
+          <li><b>Overgeslagen</b> woord = fout. <b>Toegevoegd</b> woord = ${state.normen.insCount!==false?"fout":"geen fout (instelling bij Normen)"}. <b>Herhalen</b> = geen fout.</li>
+          <li>Twijfel je? Volg de scoringsinstructie van de AVI-uitgave die je school gebruikt.</li>
+        </ul></details>
       <div class="legend" style="margin:10px 0"><span>Tik op een woord:</span><span style="background:#fff;border:1px solid var(--line)">juist</span><span class="m-fout">fout</span><span class="m-overgeslagen">overgeslagen</span><span class="m-zelfcorrectie">zelfcorrectie</span></div>
       <div class="reviewtext" id="rv-text-words">${toks.map(tk=>tk.t==="w"?`<span class="w ${b.marks&&b.marks[tk.i]&&b.marks[tk.i]!=="juist"?"m-"+b.marks[tk.i]:""}" data-rw="${tk.i}">${esc(tk.s)}</span>`:esc(tk.s)).join("")}</div>
       ${b.transcript?`<details style="margin-top:8px"><summary class="small muted">Wat de spraakherkenning hoorde</summary><p class="small">${esc(b.transcript)}</p></details>`:""}`}
     <div class="formgrid" style="margin-top:16px">
+      ${!manual && b.secondsButton!=null?`<div class="small muted" style="grid-column:1/-1">${b.timeMethod==="stem"?`⏱ Leestijd gemeten <b>van het eerste tot het laatste gesproken woord</b>: ${fmtSec(b.seconds)} (met de knoppen: ${fmtSec(b.secondsButton)}).`:`⏱ Leestijd gemeten met de knoppen (start → "klaar"): ${fmtSec(b.secondsButton)}. Het begin en einde van het spreken kon niet bepaald worden; pas aan na het beluisteren indien nodig.`}</div>`:""}
       <label class="f">Leestijd minuten<input type="number" min="0" id="rv-min" value="${Math.floor((b.seconds||0)/60)}"></label>
       <label class="f">Leestijd seconden<input type="number" min="0" max="59" id="rv-sec" value="${(b.seconds||0)%60}"></label>
       ${manual? `<label class="f">Aantal fouten<input type="number" min="0" id="rv-errors" value="${b.errors||0}"></label>
@@ -1477,7 +1573,9 @@ function reviewKpis(b){
     <div class="kpi">Zelfcorrecties<b>${m.selfCorr}</b></div>
     <div class="kpi">Woorden correct/min<b>${m.wcpm??"–"}</b></div>
     <div class="kpi">Nauwkeurigheid<b>${pct(m.acc)}</b></div>
-    <div class="kpi">Resultaat<b><span class="pill ${m.result}" style="font-size:16px">${m.result||"–"}</span></b></div>`;
+    <div class="kpi">Oordeel tijd<b>${m.tijd?`<span class="pill ${RNAME[m.tijd]}" style="font-size:16px">${m.tijd} · ${RNAME[m.tijd]}</span>`:"–"}</b><span class="small muted">${m.basis==="tekst"?"grenswaarden van de tekst":(m.wpm!=null?m.wpm+" woorden/min":"")}</span></div>
+    <div class="kpi">Oordeel fouten<b>${m.fouten?`<span class="pill ${RNAME[m.fouten]}" style="font-size:16px">${m.fouten} · ${RNAME[m.fouten]}</span>`:"–"}</b><span class="small muted">${m.basis==="tekst"?"grenswaarden van de tekst":"richtwaarde"}</span></div>
+    <div class="kpi">Resultaat (zwakste telt)<b><span class="pill ${m.result}" style="font-size:16px">${m.result||"–"}</span></b><span class="small muted">indicatief</span></div>`;
 }
 function readReviewForm(){
   const b = reviewDraft; const v = id => { const el=$("#"+id); return el? el.value : null; };
@@ -1571,7 +1669,7 @@ document.addEventListener("click", async e=>{
       break; }
     case "session-stop-ok": {
       const sid = view.sid; closeModal(); stopSpeak(); ttsRun++;
-      if(reading){ try{ reading.listen && reading.listen.stop && reading.listen.stop(); reading.rec && reading.rec.cancel(); }catch(e){} reading=null; }
+      if(reading){ try{ reading.listen && reading.listen.stop && reading.listen.stop(); reading.rec && reading.rec.cancel(); reading.vad && reading.vad.stop(); }catch(e){} reading=null; }
       const k = dayKey(); Sync.queuePractice(sid, k, practiceToday(sid));
       stopSession(); micOKFor=null; go({name:"home"});
       const s1 = student(sid); toast("Goed gewerkt"+(s1?", "+s1.naam:"")+"! Tot de volgende keer. 👋");
@@ -1621,6 +1719,11 @@ document.addEventListener("click", async e=>{
       if(!title||!body){ toast("Vul een titel en een tekst in."); return; }
       let t = id? textById(id) : null; if(!t){ t={id:"t-"+uid()}; state.texts.push(t); }
       t.title=title; t.body=body; t.level=$("#tf-level").value; t.source=$("#tf-source").value.trim();
+      { const nv={tB:$("#tf-tB").value,tI:$("#tf-tI").value,fB:$("#tf-fB").value,fI:$("#tf-fI").value}; const vn=validNorms(nv);
+        const any=Object.values(nv).some(x=>x!=="");
+        if(any && !vn){ toast("Vul alle vier de grenswaarden in, of laat ze allemaal leeg."); return; }
+        if(vn && (vn.tI<vn.tB || vn.fI<vn.fB)){ toast("De instructiegrens moet groter of gelijk zijn aan de beheersingsgrens."); return; }
+        t.norms = vn; }
       const chosen=[...document.querySelectorAll(".tf-as")].filter(x=>x.checked).map(x=>x.value);
       state.students.forEach(s=>{ s.assigned=s.assigned.filter(x=>x!==t.id); if(chosen.includes(s.id)) s.assigned.push(t.id); });
       save(); closeModal(); render(); toast("Tekst bewaard."); break; }
@@ -1672,6 +1775,7 @@ document.addEventListener("input", e=>{
   const t = e.target;
   if(t.closest && t.closest(".modal") && /^rv-/.test(t.id||"")){ updateReviewKpis(); return; }
   if(t.dataset.st){ const s=student(t.dataset.id); if(s){ s[t.dataset.st]=t.value; save(); } return; }
+  if(t.dataset.normIns!==undefined){ state.normen.insCount = t.checked; save(); return; }
   if(t.dataset.norm){ const v=parseFloat(String(t.value).replace(",", ".")); if(!isNaN(v)){ state.normen[t.dataset.norm]=v/100; save(); } return; }
   if(t.dataset.tempo){ const v=parseInt(t.value); if(!isNaN(v)){ state.normen.levels[+t.dataset.tempo].tempo=v; save(); } return; }
   if(t.dataset.tip){ state.tips[+t.dataset.tip].tip=t.value; save(); return; }
@@ -1695,7 +1799,7 @@ document.addEventListener("keydown", e=>{ if(e.key==="Escape" && $("#modal").inn
 window.addEventListener("beforeunload", ()=>save());
 
 // Testhaak (alleen voor controle; doet niets in gewoon gebruik)
-window.__leesapp = {align, metrics, classify, summary, wordsOf, suggestStruik, Sync, get state(){return state;}};
+window.__leesapp = {align, metrics, classify, judge, speechSpan, summary, wordsOf, suggestStruik, Sync, get state(){return state;}};
 
 render();
 (async()=>{ if(await Sync.pullPakket()){ if(view.name==="home") render(); } Sync.flush(); })();
