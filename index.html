@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="nl-BE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leesapp – technisch lezen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF7F0; --card:#FFFFFF; --ink:#1E2A2E; --muted:#61707A; --line:#E4DED3;
+  --teal:#1F5F6B; --teal2:#2E7D8A; --tealsoft:#E3EFF1;
+  --orange:#E07B39; --orangesoft:#FCE9DC;
+  --green:#2E8B57; --greensoft:#DDF1E5;
+  --red:#C0392B; --redsoft:#F8DEDA;
+  --amber:#B7791F; --ambersoft:#FBEFD5;
+  --purple:#7B4FA0; --purplesoft:#EFE5F6;
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Lexend","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--teal)}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 24px 60px}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.topbar h1{font-size:24px;margin:0;color:var(--teal);font-weight:700}
+.spacer{flex:1}
+.btn{border:0;border-radius:12px;padding:11px 18px;background:var(--teal);color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:8px;line-height:1.1;transition:transform .05s,filter .15s}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:transparent;color:var(--teal);border:2px solid var(--tealsoft)}
+.btn.light{background:var(--tealsoft);color:var(--teal)}
+.btn.orange{background:var(--orange)}
+.btn.green{background:var(--green)}
+.btn.red{background:var(--red)}
+.btn.small{padding:7px 12px;font-size:14px;border-radius:10px}
+.btn.big{padding:18px 28px;font-size:21px;border-radius:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;gap:16px}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600;background:var(--tealsoft);color:var(--teal)}
+.pill.Beheerst{background:var(--greensoft);color:var(--green)}
+.pill.Instructie{background:var(--ambersoft);color:var(--amber)}
+.pill.Frustratie{background:var(--redsoft);color:var(--red)}
+.pill.warn{background:var(--orangesoft);color:#A2531F}
+.pill.ok{background:var(--greensoft);color:var(--green)}
+/* Home */
+.hello{font-size:34px;font-weight:700;color:var(--teal);margin:24px 0 6px}
+.kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-top:22px}
+.kid{border:0;background:var(--card);border-radius:24px;padding:28px 18px;box-shadow:0 2px 0 var(--line);border:2px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:14px;font-size:22px;font-weight:600}
+.kid:hover{border-color:var(--teal2)}
+.avatar{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:38px;font-weight:700}
+.corner{position:fixed;right:18px;bottom:16px}
+/* Student */
+.timerbox{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:600}
+.timerbar{width:130px;height:10px;border-radius:99px;background:var(--tealsoft);overflow:hidden}
+.timerbar>div{height:100%;background:var(--teal2)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.tile{text-align:left;border:2px solid var(--line);background:var(--card);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:8px}
+.tile:hover{border-color:var(--teal2)}
+.tile h3{margin:0;font-size:21px}
+/* Reader */
+.reader{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:34px 40px;line-height:1.9;letter-spacing:.01em}
+.reader .w{border-radius:6px;padding:0 3px;margin:0 -3px;transition:background .15s}
+.reader .sent{background:#FFF6D6}
+.reader .now{background:#FFD866;box-shadow:0 0 0 2px #FFD866}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:16px 0}
+.recdot{width:14px;height:14px;border-radius:50%;background:var(--red);animation:pulse 1.2s infinite}
+@keyframes pulse{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+.bigmsg{font-size:26px;font-weight:700;color:var(--teal)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 14px;font-size:20px;font-weight:600}
+.practiceword{font-size:64px;font-weight:700;letter-spacing:.03em;text-align:center;margin:30px 0 10px;color:var(--ink)}
+.feedback{min-height:40px;text-align:center;font-size:24px;font-weight:700}
+/* Teacher */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:18px}
+.tab{background:transparent;border:0;padding:10px 14px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab.on{color:var(--teal);border-bottom-color:var(--teal)}
+table{border-collapse:collapse;width:100%;background:#fff}
+th,td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:left;vertical-align:top;font-size:14px}
+th{background:var(--tealsoft);color:var(--teal);font-weight:600;font-size:13px;position:sticky;top:0}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+td.num,th.num{text-align:right;white-space:nowrap}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500}
+label.f input,label.f select,label.f textarea{font-size:15px;color:var(--ink);padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+textarea{resize:vertical}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.reviewtext{line-height:2.2;font-size:19px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+.reviewtext .w{cursor:pointer;border-radius:6px;padding:2px 3px;margin:0 -3px;border-bottom:3px solid transparent}
+.reviewtext .w:hover{outline:2px solid var(--tealsoft)}
+.m-fout{background:var(--redsoft);border-bottom-color:var(--red)!important}
+.m-overgeslagen{background:var(--ambersoft);border-bottom-color:var(--amber)!important;text-decoration:line-through}
+.m-zelfcorrectie{background:var(--purplesoft);border-bottom-color:var(--purple)!important}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
+.legend span{padding:2px 8px;border-radius:6px}
+.heat td.num{font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;color:var(--teal)}
+.studentcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}
+.scard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.scard h3{margin:0;display:flex;align-items:center;gap:10px;font-size:18px}
+.mini{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:14px}
+.kv span:nth-child(odd){color:var(--muted)}
+.kv span:nth-child(even){text-align:right;font-weight:500}
+.tip{background:var(--orangesoft);border-radius:10px;padding:10px 12px;font-size:14px}
+.banner{background:var(--ambersoft);border:1px solid #EBD3A3;border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:14px}
+/* Modal */
+.modalbg{position:fixed;inset:0;background:rgba(20,30,35,.45);display:grid;place-items:center;z-index:50;padding:20px}
+.modal{background:#fff;border-radius:20px;max-width:980px;width:100%;max-height:92vh;overflow:auto;padding:24px}
+.modal h2{margin-top:0;color:var(--teal)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;z-index:60;font-weight:500}
+.pin{display:flex;gap:10px;justify-content:center;margin:16px 0}
+.pin input{width:200px;text-align:center;font-size:30px;letter-spacing:.4em;padding:10px;border:2px solid var(--line);border-radius:12px}
+.hidden{display:none!important}
+.meter{height:26px;border-radius:99px;background:var(--tealsoft);overflow:hidden;margin:14px 0}
+.meter>div{height:100%;width:0;background:linear-gradient(90deg,var(--green),#8BD17C);transition:width .08s}
+.step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.stepnum{flex:0 0 40px;height:40px;border-radius:50%;background:var(--tealsoft);color:var(--teal);display:grid;place-items:center;font-weight:700;font-size:18px}
+.step.ok .stepnum{background:var(--green);color:#fff}
+.step.bad .stepnum{background:var(--red);color:#fff}
+.choices{display:flex;gap:16px;flex-wrap:wrap}
+.choices>div{display:flex;flex-direction:column;gap:6px}
+.hint{font-size:15px;color:var(--muted);padding-left:6px;line-height:1.35}
+.howto{background:var(--tealsoft);border-radius:14px;padding:12px 16px;font-size:17px;margin:0 0 14px;color:var(--teal)}
+.howto b{color:var(--ink)}
+.readbar{display:flex;flex-direction:column;gap:12px;background:#E9F6EE;border:2px solid #BFE3CC;border-radius:16px;padding:14px 18px;margin:16px 0}
+.btn.stop{background:#fff;color:var(--red);border:2px solid var(--redsoft)}
+.done-overlay{position:fixed;inset:0;background:rgba(251,247,240,.97);display:grid;place-items:center;z-index:40;text-align:center}
+.star{font-size:80px}
+@media (max-width:700px){.reader{padding:22px}.wrap{padding:14px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<script type="text/plain" id="gas-template">/**
+ * Leesapp – koppeling met deze Google Spreadsheet
+ * ------------------------------------------------
+ * Plak dit script in: Extensies → Apps Script (in een nieuwe Google Spreadsheet).
+ * Implementeren → Nieuwe implementatie → Type: Web-app
+ *   Uitvoeren als: Ikzelf
+ *   Wie heeft toegang: Iedereen
+ * Kopieer de web-app-URL en plak die in de Leesapp (Leerkracht → Instellingen → Koppeling).
+ *
+ * De twee sleutels hieronder maakt de Leesapp voor je aan. Verander ze niet,
+ * tenzij je ze ook in de app aanpast.
+ */
+const CLASS_KEY = '__CLASS_KEY__';     // staat ook in de app op de Chromebooks
+const TEACHER_KEY = '__TEACHER_KEY__'; // alleen op het toestel van de leerkracht
+const FOLDER_NAME = 'Leesapp – gegevens';
+
+const HEAD = ['Datum', 'Leerling (code)', 'Tekst (titel)', 'AVI-niveau tekst', 'Aantal woorden',
+  'Leestijd minuten', 'Leestijd seconden', 'Aantal fouten', 'Zelfcorrecties', 'Struikelpunt 1',
+  'Struikelpunt 2', 'Probleemwoorden', 'Opmerking', 'Woorden correct/min', 'Nauwkeurigheid',
+  'Resultaat', 'Status', 'Naam', 'id', 'data (niet wijzigen)', 'Bijgewerkt'];
+const PHEAD = ['Datum', 'Leerling (code)', 'Naam', 'Minuten geoefend', 'leerling-id', 'sleutel', 'seconden'];
+const COL_ID = 19, COL_DATA = 20;
+
+function out_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+function role_(k) {
+  if (k && k === TEACHER_KEY) return 'teacher';
+  if (k && k === CLASS_KEY) return 'class';
+  return null;
+}
+function sheet_(name, head) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.getRange(1, 1, 1, head.length).setValues([head]).setFontWeight('bold').setBackground('#E3EFF1');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+function folder_() {
+  const it = DriveApp.getFoldersByName(FOLDER_NAME);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(FOLDER_NAME);
+}
+function findRow_(sh, col, val) {
+  const last = sh.getLastRow();
+  if (last < 2) return -1;
+  const f = sh.getRange(2, col, last - 1, 1).createTextFinder(String(val)).matchEntireCell(true).findNext();
+  return f ? f.getRow() : -1;
+}
+
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  const r = role_(p.key);
+  if (!r) return out_({ ok: false, error: 'verkeerde sleutel' });
+  if (p.action === 'ping') return out_(r === 'teacher' ? { ok: true, role: r, classKey: CLASS_KEY } : { ok: true, role: r });
+  if (p.action === 'pakket') {
+    const it = folder_().getFilesByName('leesapp-pakket.json');
+    return out_({ ok: true, pakket: it.hasNext() ? JSON.parse(it.next().getBlob().getDataAsString()) : null });
+  }
+  if (r !== 'teacher') return out_({ ok: false, error: 'alleen voor de leerkracht' });
+  if (p.action === 'resultaten') {
+    const sh = sheet_('App-beurten', HEAD);
+    const last = sh.getLastRow();
+    const beurten = last < 2 ? [] : sh.getRange(2, COL_DATA, last - 1, 1).getValues()
+      .map(function (v) { try { return JSON.parse(v[0]); } catch (x) { return null; } })
+      .filter(function (x) { return x; });
+    const ps = sheet_('App-oefentijd', PHEAD);
+    const pl = ps.getLastRow();
+    const practice = pl < 2 ? [] : ps.getRange(2, 5, pl - 1, 3).getValues()
+      .map(function (row) { return { sid: row[0], key: String(row[1]), seconds: Number(row[2]) || 0 }; });
+    return out_({ ok: true, beurten: beurten, practice: practice });
+  }
+  if (p.action === 'audio') {
+    const it = folder_().getFilesByName(p.id + '.webm');
+    if (!it.hasNext()) return out_({ ok: false, error: 'geen opname' });
+    const file = it.next();
+    return out_({ ok: true, mime: file.getMimeType(), b64: Utilities.base64Encode(file.getBlob().getBytes()) });
+  }
+  return out_({ ok: false, error: 'onbekende actie' });
+}
+
+function doPost(e) {
+  let d;
+  try { d = JSON.parse(e.postData.contents); } catch (x) { return out_({ ok: false, error: 'geen geldige gegevens' }); }
+  const r = role_(d.key);
+  if (!r) return out_({ ok: false, error: 'verkeerde sleutel' });
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    if (d.action === 'beurt') {
+      const sh = sheet_('App-beurten', HEAD);
+      const b = d.beurt;
+      const existing = findRow_(sh, COL_ID, b.id);
+      if (existing > 0 && r !== 'teacher') {
+        // Een leerling-toestel mag een beurt die de leerkracht al nakeek niet overschrijven.
+        let old = {};
+        try { old = JSON.parse(sh.getRange(existing, COL_DATA).getValue() || '{}'); } catch (x) {}
+        if (old.checked) return out_({ ok: true, skipped: true });
+      }
+      const row = [new Date(b.ts)].concat(d.row.slice(1, 18)).concat([b.id, JSON.stringify(b), new Date()]);
+      let rr = existing;
+      if (existing > 0) sh.getRange(existing, 1, 1, row.length).setValues([row]);
+      else { sh.appendRow(row); rr = sh.getLastRow(); }
+      sh.getRange(rr, 1).setNumberFormat('dd/mm/yyyy');
+      sh.getRange(rr, 15).setNumberFormat('0.0%');
+      sh.getRange(rr, 21).setNumberFormat('dd/mm/yyyy hh:mm');
+      return out_({ ok: true });
+    }
+    if (d.action === 'audio') {
+      const f = folder_();
+      const name = d.id + '.webm';
+      const old = f.getFilesByName(name);
+      while (old.hasNext()) old.next().setTrashed(true);
+      f.createFile(Utilities.newBlob(Utilities.base64Decode(d.b64), d.mime || 'audio/webm', name));
+      return out_({ ok: true });
+    }
+    if (d.action === 'practice') {
+      const sh = sheet_('App-oefentijd', PHEAD);
+      const key = d.sid + '|' + d.day;
+      const row = [d.day, d.code || '', d.naam || '', Math.round((Number(d.seconds) || 0) / 60), d.sid, key, Number(d.seconds) || 0];
+      const existing = findRow_(sh, 6, key);
+      if (existing > 0) {
+        const prev = Number(sh.getRange(existing, 7).getValue()) || 0;
+        if (row[6] >= prev) sh.getRange(existing, 1, 1, row.length).setValues([row]);
+      } else sh.appendRow(row);
+      return out_({ ok: true });
+    }
+    if (r !== 'teacher') return out_({ ok: false, error: 'alleen voor de leerkracht' });
+    if (d.action === 'pakket') {
+      const f = folder_();
+      const txt = JSON.stringify(d.pakket);
+      const it = f.getFilesByName('leesapp-pakket.json');
+      if (it.hasNext()) it.next().setContent(txt);
+      else f.createFile('leesapp-pakket.json', txt, MimeType.PLAIN_TEXT);
+      return out_({ ok: true });
+    }
+    if (d.action === 'delete') {
+      const sh = sheet_('App-beurten', HEAD);
+      const row = findRow_(sh, COL_ID, d.id);
+      if (row > 0) sh.deleteRow(row);
+      const it = folder_().getFilesByName(d.id + '.webm');
+      while (it.hasNext()) it.next().setTrashed(true);
+      return out_({ ok: true });
+    }
+    return out_({ ok: false, error: 'onbekende actie' });
+  } finally {
+    lock.releaseLock();
+  }
+}
+</script>
+<script>
+"use strict";
+/* ============================================================
+   Leesapp – technisch lezen (3de leerjaar)
+   Werkt volledig in de browser (Chrome op Chromebook).
+   Gegevens blijven op dit toestel (localStorage + IndexedDB voor
+   opnames). Overzetten gebeurt met export/import-bestanden.
+   ============================================================ */
+
+/* Koppeling die in deze kopie van de app is ingebakken (via 'App voor de Chromebooks'). */
+const BAKED = /*BAKED-START*/{"url":"","classKey":""}/*BAKED-END*/;
+const APP_SOURCE = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+const APP_VERSION = "2026-10-29 · v5";
+const STORE_KEY = "leesapp-v1";
+const COLORS = ["#2E7D8A","#E07B39","#7B4FA0","#2E8B57","#C0392B","#B7791F","#3B6FB6","#8A6D3B"];
+
+const DEFAULT_LEVELS = [
+  ["Start",20,"Beginnende lezer"],["M3",25,"Midden 1ste lj"],["E3",35,"Einde 1ste lj"],
+  ["M4",45,"Midden 2de lj"],["E4",55,"Einde 2de lj"],["M5",65,"Midden 3de lj"],
+  ["E5",75,"Einde 3de lj"],["M6",85,"Midden 4de lj"],["E6",95,"Einde 4de lj"],
+  ["M7",105,"Midden 5de lj"],["E7",115,"Einde 5de lj"],["Plus",125,"Boven einde 5de lj"]
+].map(([lv,tempo,moment])=>({lv,tempo,moment}));
+
+const DEFAULT_TIPS = [
+  {id:"clusters",name:"Medeklinkerclusters",ex:"straat, sprong, herfst",tip:"Woordrijtjes met clusters: eerst klank per klank, dan vlot. Flitsen (woord kort tonen). Daarna dezelfde woorden in zinnen."},
+  {id:"meerlettergrepig",name:"Meerlettergrepige woorden",ex:"geheimzinnig, voorzichtig",tip:"Woorden hakken in klankgroepen met boogjes (ge-heim-zin-nig). Eerst lettergrepen apart, dan aan elkaar. Leesrijtjes van kort naar lang."},
+  {id:"tweeteken",name:"Tweetekenklanken (ei/ij, au/ou, ui, eu, oe)",ex:"trein, koud, buik",tip:"Klankgebaren of klankkaarten. Rijtjes waarin de klanken door elkaar staan (ui-eu-oe). Snelle herkenning met flitskaarten."},
+  {id:"opengesloten",name:"Open/gesloten lettergreep",ex:"ma-nen / man-nen, bo-ven",tip:"Regel inoefenen: lettergreep eindigt op klinker = lange klank. Sorteeroefeningen en hardop hakken."},
+  {id:"samenstelling",name:"Samenstellingen",ex:"fietswedstrijd, woensdagmiddag",tip:"Eerst de delen zoeken en afbakenen (fiets | wedstrijd), dan als één woord lezen."},
+  {id:"affix",name:"Voor- en achtervoegsels (be-, ge-, ver-, -ig, -lijk)",ex:"verkleurd, eindelijk",tip:"Vaste stukjes leren herkennen als één blok. Flitsen van voor- en achtervoegsels, dan woorden ermee."},
+  {id:"leen",name:"Leenwoorden",ex:"garage, cadeau, medaille",tip:"Woordbeeld inoefenen: voorlezen ('woord beluisteren'), nazeggen, 3x lezen. Woordmuur in de klas."},
+  {id:"overslaan",name:"Woorden overslaan / regel kwijt",ex:"",tip:"Leesvinger of leeslineaal. Kortere tekstblokken. Vergroot lettertype en regelafstand."},
+  {id:"traag",name:"Spellend / traag lezen",ex:"",tip:"Herhaald lezen: dezelfde tekst 3 à 4 keer, tijd laten noteren en vooruitgang tonen. Duolezen met een sterkere lezer. Tekst op instructieniveau."},
+  {id:"raden",name:"Raden / woorden vervangen",ex:"",tip:"Nauwkeurig lezen: woord eerst volledig bekijken, tempo bewust laten zakken. Bij fout: laten terugkijken naar het woord, niet voorzeggen."},
+  {id:"intonatie",name:"Leestekens / intonatie",ex:"",tip:"Echo-lezen: de app leest een zin voor, het kind leest na ('Om beurten'). Oefenen met dialoogzinnen en vraagzinnen."}
+];
+
+const DEFAULT_TEXTS = [
+  {id:"t-fiets",title:"Waar is mijn fiets?",level:"M5",source:"Eigen tekst",body:'Lotte rent naar buiten. Haar fiets staat niet meer bij de schuur. "Mama!" roept ze. "Mijn fiets is weg!" Mama komt kijken. Ze zoeken achter de heg en naast de vuilnisbak. Niets. Dan hoort Lotte gegiechel. Het komt van achter de garage. Daar staat haar broertje Wout. Hij zit op haar fiets, maar zijn benen zijn veel te kort. "Ik wou het eens proberen," zegt hij verlegen. Lotte moet lachen. "Kom maar," zegt ze. "Ik leer je fietsen. Maar eerst zetten we het zadel lager."'},
+  {id:"t-koffer",title:"De koffer op zolder",level:"E5",source:"Eigen tekst",body:'Opa woont in een oud huis aan de rand van het dorp. Op een regenachtige woensdagmiddag mag Noor eindelijk mee naar de zolder, waar ze nog nooit geweest is. De houten trap kraakt bij elke stap. Boven ruikt het naar stof en oude kranten. Overal staan dozen, en in de hoek staat een grote koffer met koperen sloten. "Wat zit daarin?" vraagt Noor nieuwsgierig. Opa glimlacht geheimzinnig. Hij draait een klein sleuteltje om en tilt voorzichtig het deksel op. In de koffer liggen tientallen brieven, een verkleurde foto en een zilveren medaille. "Die heb ik gewonnen toen ik zo oud was als jij," vertelt opa. "Bij een fietswedstrijd door het hele dorp." Noor bekijkt de medaille aandachtig. "Mag ik volgend jaar ook meedoen?" vraagt ze. "Als je goed traint," lacht opa, "dan rijd je misschien nog sneller dan ik."'}
+];
+
+function defaultState(){
+  return {
+    version:1,
+    settings:{pin:"1234",sessionMin:25,lang:"nl-BE",voiceURI:"",rate:0.85,autoCheck:true,record:true,fontSize:28,syncUrl:"",classKey:"",teacherKey:""},
+    normen:{beheerst:0.97,frustratie:0.93,tempoFactor:0.70,levels:JSON.parse(JSON.stringify(DEFAULT_LEVELS))},
+    tips:JSON.parse(JSON.stringify(DEFAULT_TIPS)),
+    students:[1,2,3,4].map(i=>({id:"s"+i,code:"L"+i,naam:"Leerling "+i,streef:"M5",assigned:["t-fiets"],color:COLORS[i-1]})),
+    texts:JSON.parse(JSON.stringify(DEFAULT_TEXTS)),
+    practice:{},   // practice[studentId][yyyy-mm-dd] = seconden
+    beurten:[],
+    outbox:[],     // nog te versturen naar de spreadsheet
+    pakketUpdated:0
+  };
+}
+
+let state = loadState();
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      const d = defaultState();
+      s.settings = Object.assign(d.settings, s.settings||{});
+      s.normen = Object.assign(d.normen, s.normen||{});
+      s.tips = s.tips && s.tips.length ? s.tips : d.tips;
+      s.students = s.students || d.students;
+      s.texts = s.texts || d.texts;
+      s.practice = s.practice || {};
+      s.beurten = s.beurten || [];
+      s.outbox = s.outbox || [];
+      s.pakketUpdated = s.pakketUpdated || 0;
+      return s;
+    }
+  }catch(e){ console.warn("Kon gegevens niet laden", e); }
+  return defaultState();
+}
+let storageOK = true;
+if(BAKED.url && !state.settings.syncUrl){ state.settings.syncUrl = BAKED.url; state.settings.classKey = BAKED.classKey; }
+// Koppelingslink voor leerlingen: …/index.html#koppel-<code>
+(function(){
+  const h = location.hash || "";
+  if(!h.startsWith("#koppel-")) return;
+  try{
+    const cfg = JSON.parse(decodeURIComponent(escape(atob(h.slice(8).replace(/-/g,"+").replace(/_/g,"/")))));
+    if(cfg.url && cfg.classKey && !state.settings.teacherKey){ state.settings.syncUrl = cfg.url; state.settings.classKey = cfg.classKey; saveRaw(); }
+  }catch(e){ console.warn("Koppelingslink ongeldig", e); }
+  try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+})();
+function studentLink(){
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({url:state.settings.syncUrl.trim(), classKey:state.settings.classKey})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  return location.origin + location.pathname + "#koppel-" + code;
+}
+function saveRaw(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); storageOK = true; }
+  catch(e){ storageOK = false; console.warn("Opslaan mislukt", e); }
+}
+function save(){ saveRaw(); if(typeof view!=="undefined" && view.name==="teacher" && typeof Sync!=="undefined") Sync.schedulePublish(); }
+
+/* ---------------- IndexedDB voor geluidsopnames ---------------- */
+const AudioDB = (()=>{
+  let dbp = null;
+  function open(){
+    if(dbp) return dbp;
+    dbp = new Promise((res,rej)=>{
+      try{
+        const r = indexedDB.open("leesapp-audio",1);
+        r.onupgradeneeded = ()=> r.result.createObjectStore("audio");
+        r.onsuccess = ()=> res(r.result);
+        r.onerror = ()=> rej(r.error);
+      }catch(e){ rej(e); }
+    });
+    return dbp;
+  }
+  async function tx(mode, fn){
+    const db = await open();
+    return new Promise((res,rej)=>{
+      const t = db.transaction("audio", mode); const st = t.objectStore("audio");
+      const req = fn(st); t.oncomplete = ()=>res(req && req.result); t.onerror = ()=>rej(t.error);
+    });
+  }
+  return {
+    put:(id,blob)=>tx("readwrite",st=>st.put(blob,id)).catch(()=>null),
+    get:(id)=>tx("readonly",st=>st.get(id)).catch(()=>null),
+    del:(id)=>tx("readwrite",st=>st.delete(id)).catch(()=>null),
+    clear:()=>tx("readwrite",st=>st.clear()).catch(()=>null)
+  };
+})();
+
+/* ---------------- Hulpfuncties ---------------- */
+const $ = (sel,root=document)=>root.querySelector(sel);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad = n => String(n).padStart(2,"0");
+function dayKey(ts=Date.now()){ const d=new Date(ts); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function fmtDate(ts){ const d=new Date(ts); return pad(d.getDate())+"/"+pad(d.getMonth()+1)+"/"+d.getFullYear(); }
+function fmtDateTime(ts){ const d=new Date(ts); return fmtDate(ts)+" "+pad(d.getHours())+":"+pad(d.getMinutes()); }
+function fmtSec(sec){ sec=Math.max(0,Math.round(sec||0)); return Math.floor(sec/60)+":"+pad(sec%60); }
+function pct(x){ return x==null||isNaN(x) ? "–" : (Math.round(x*1000)/10).toString().replace(".",",")+"%"; }
+function initials(n){ return (n||"?").trim().split(/\s+/).map(p=>p[0]).join("").slice(0,2).toUpperCase(); }
+const WORD_RE = /[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu;
+function tokenize(body){
+  const out=[]; let last=0; let m; WORD_RE.lastIndex=0;
+  while((m=WORD_RE.exec(body))){ if(m.index>last) out.push({t:"sep",s:body.slice(last,m.index)}); out.push({t:"w",s:m[0]}); last=m.index+m[0].length; }
+  if(last<body.length) out.push({t:"sep",s:body.slice(last)});
+  let wi=0; out.forEach(tk=>{ if(tk.t==="w") tk.i=wi++; });
+  return out;
+}
+function wordsOf(body){ return (String(body||"").match(WORD_RE)||[]); }
+function norm(w){ return String(w).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,""); }
+function lev(a,b){
+  if(a===b) return 0; const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++){ cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); } prev=cur; }
+  return prev[n];
+}
+function student(id){ return state.students.find(s=>s.id===id); }
+function textById(id){ return state.texts.find(t=>t.id===id); }
+function levelIdx(lv){ return state.normen.levels.findIndex(l=>l.lv===lv); }
+function tipById(id){ return state.tips.find(t=>t.id===id); }
+function tipName(id){ const t=tipById(id); return t?t.name:""; }
+
+/* ---------------- Berekeningen (zelfde regels als de Leesvolger) ---------------- */
+function beurtCounts(b){
+  if(b.marks && b.marks.length){
+    let fout=0, over=0, zc=0;
+    b.marks.forEach(m=>{ if(m==="fout") fout++; else if(m==="overgeslagen") over++; else if(m==="zelfcorrectie") zc++; });
+    return {errors: fout+over+(+b.insertions||0), selfCorr: zc, fout, over, ins:(+b.insertions||0)};
+  }
+  return {errors:+b.errors||0, selfCorr:+b.selfCorr||0, fout:+b.errors||0, over:0, ins:0};
+}
+function metrics(b){
+  const {errors,selfCorr} = beurtCounts(b);
+  const words = +b.words||0, sec = +b.seconds||0;
+  const wcpm = (words && sec>0) ? Math.round((words-errors)/(sec/60)) : null;
+  const acc = words ? (words-errors)/words : null;
+  return {errors,selfCorr,wcpm,acc,result:classify(acc,wcpm,b.level)};
+}
+function classify(acc,wcpm,level){
+  if(acc==null||wcpm==null||levelIdx(level)<0) return "";
+  const N=state.normen, tempo=N.levels[levelIdx(level)].tempo;
+  if(acc>=N.beheerst && wcpm>=tempo) return "Beheerst";
+  if(acc<N.frustratie || wcpm<N.tempoFactor*tempo) return "Frustratie";
+  return "Instructie";
+}
+function beurtenVan(sid){ return state.beurten.filter(b=>b.studentId===sid).sort((a,b)=>a.ts-b.ts); }
+function summary(s){
+  // Beurten die niet automatisch nagekeken konden worden, tellen pas mee na controle door de leerkracht.
+  const bs = beurtenVan(s.id).filter(b=>b.checked || !b.autoFailed);
+  const out = {n:bs.length, bs};
+  if(!bs.length) return out;
+  const ms = bs.map(metrics);
+  const last = bs[bs.length-1], lm = ms[ms.length-1];
+  out.last=last; out.lastM=lm;
+  const accs=ms.map(m=>m.acc).filter(x=>x!=null), ws=ms.map(m=>m.wcpm).filter(x=>x!=null);
+  out.avgAcc = accs.length? accs.reduce((a,b)=>a+b,0)/accs.length : null;
+  out.avgW = ws.length? Math.round(ws.reduce((a,b)=>a+b,0)/ws.length) : null;
+  let hi=-1; bs.forEach((b,i)=>{ if(ms[i].result==="Beheerst") hi=Math.max(hi,levelIdx(b.level)); });
+  out.highest = hi>=0 ? state.normen.levels[hi].lv : "nog geen";
+  out.reached = s.streef ? (hi>=levelIdx(s.streef) && hi>=0 ? "Ja" : "Nog niet") : "";
+  const counts = {}; state.tips.forEach(t=>counts[t.id]=0);
+  bs.forEach(b=>{ [b.st1,b.st2].forEach(x=>{ if(x && counts[x]!=null) counts[x]++; }); });
+  out.counts = counts;
+  let top="-", topN=0; state.tips.forEach(t=>{ if(counts[t.id]>topN){ topN=counts[t.id]; top=t.id; } });
+  out.top = top;
+  const li = levelIdx(last.level), L=state.normen.levels;
+  if(lm.result==="Beheerst") out.advies = L[Math.min(L.length-1,li+1)].lv+" – een niveau hoger";
+  else if(lm.result==="Instructie") out.advies = last.level+" – zelfde niveau, herhaald lezen";
+  else if(lm.result==="Frustratie") out.advies = L[Math.max(0,li-1)].lv+" – een niveau lager";
+  else out.advies="";
+  out.tip = top!=="-" ? (tipById(top)||{}).tip : "";
+  out.unchecked = bs.filter(b=>!b.checked).length;
+  return out;
+}
+function practiceToday(sid){ return ((state.practice[sid]||{})[dayKey()])||0; }
+
+/* ---------------- Nakijken: tekst uitlijnen met wat gehoord werd ---------------- */
+function align(refWords, hypWords){
+  // Woord-uitlijning (Needleman-Wunsch) tussen de tekst en wat de spraakherkenning hoorde.
+  const R = refWords.map(norm), H = hypWords.map(norm).filter(Boolean);
+  const n=R.length, m=H.length;
+  const same=(a,b)=> a===b || (a.length>=5 && lev(a,b)<=1);
+  const subCost=(a,b)=> same(a,b)? 0 : 0.6 + 0.8*Math.min(1, lev(a,b)/Math.max(a.length,b.length,1));
+  const isRepAt=(i,j)=>{ const h=H[j-1]; return (i>0 && same(R[i-1],h)) || (i<n && same(R[i],h)) || (j>1 && same(H[j-2],h)); };
+  const insCost=(i,j)=> isRepAt(i,j)? 0.6 : 1;
+  const D = Array.from({length:n+1},()=>new Float64Array(m+1));
+  const P = Array.from({length:n+1},()=>new Uint8Array(m+1)); // 1=diag 2=omit 3=insert
+  for(let i=1;i<=n;i++){ D[i][0]=i; P[i][0]=2; }
+  for(let j=1;j<=m;j++){ D[0][j]=D[0][j-1]+insCost(0,j); P[0][j]=3; }
+  for(let i=1;i<=n;i++){
+    for(let j=1;j<=m;j++){
+      const sub = D[i-1][j-1] + subCost(R[i-1],H[j-1]);
+      const up = D[i-1][j]+1, left = D[i][j-1]+insCost(i,j);
+      if(sub<=up && sub<=left){ D[i][j]=sub; P[i][j]=1; }
+      else if(up<=left){ D[i][j]=up; P[i][j]=2; }
+      else { D[i][j]=left; P[i][j]=3; }
+    }
+  }
+  const marks = new Array(n).fill("juist"); const heard = new Array(n).fill("");
+  let insertions=0, repetitions=0; let i=n, j=m;
+  while(i>0 || j>0){
+    const p = P[i][j];
+    if(i>0 && j>0 && p===1){ marks[i-1] = same(R[i-1],H[j-1])?"juist":"fout"; heard[i-1]=H[j-1]; i--; j--; }
+    else if(i>0 && (j===0 || p===2)){ marks[i-1]="overgeslagen"; i--; }
+    else { if(isRepAt(i,j)) repetitions++; else insertions++; j--; }
+  }
+  return {marks, heard, insertions, repetitions};
+}
+
+/* ---------------- Struikelpunten voorstellen ---------------- */
+function suggestStruik(b){
+  const ws = wordsOf(textById(b.textId)?.body || b.bodySnapshot || "");
+  const score = {}; state.tips.forEach(t=>score[t.id]=0);
+  const errWords = [];
+  (b.marks||[]).forEach((m,i)=>{ if(m==="fout"||m==="overgeslagen") errWords.push(ws[i]||""); });
+  errWords.forEach(w=>{
+    const x = w.toLowerCase();
+    const vg = (x.replace(/ij/g,"e").match(/[aeiouyéëè]+/g)||[]).length;
+    if(/[bcdfghjklmnpqrstvwxz]{3,}/.test(x.replace(/ch/g,"x").replace(/ng/g,"x")) || /^(str|spr|spl|schr|sch|kl|kr|bl|br|fl|fr|gl|gr|pl|pr|sl|sm|sn|sp|st|tr|zw|dr)/.test(x)) score.clusters++;
+    if(vg>=3) score.meerlettergrepig++;
+    if(/(ei|ij|au|ou|ui|eu|oe)/.test(x)) score.tweeteken++;
+    if(/^(be|ge|ver|ont|her)/.test(x) && x.length>5 || /(ig|lijk|heid|ing|tje|je)$/.test(x) && x.length>5) score.affix++;
+    if(x.length>=10 && vg>=3) score.samenstelling++;
+    if(/(age$|eau|ille|th|ée|é|[cq][aou]|ph)/.test(x)) score.leen++;
+  });
+  const c = beurtCounts(b), m = metrics(b);
+  if(c.over>=3) score.overslaan += c.over;
+  if(c.fout>=3 && m.acc!=null && m.acc<state.normen.beheerst) score.raden += Math.ceil(c.fout/2);
+  const li = levelIdx(b.level);
+  if(m.wcpm!=null && li>=0 && m.wcpm < state.normen.tempoFactor*state.normen.levels[li].tempo) score.traag += 3;
+  const ranked = Object.entries(score).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k])=>k);
+  return [ranked[0]||"", ranked[1]||""];
+}
+
+/* ---------------- Spraak: voorlezen (TTS) ---------------- */
+let voicesCache=[];
+function loadVoices(){ try{ voicesCache = speechSynthesis.getVoices()||[]; }catch(e){ voicesCache=[]; } return voicesCache; }
+if("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged = ()=>{ loadVoices(); if(view.name==="teacher" && view.tab==="instellingen") render(); }; }
+function pickVoice(){
+  const vs = voicesCache.length? voicesCache : loadVoices();
+  if(state.settings.voiceURI){ const v=vs.find(v=>v.voiceURI===state.settings.voiceURI); if(v) return v; }
+  return vs.find(v=>/nl[-_]be/i.test(v.lang)) || vs.find(v=>/^nl/i.test(v.lang)) || null;
+}
+function speak(text,{rate,onBoundary}={}){
+  return new Promise(res=>{
+    if(!("speechSynthesis" in window)){ res(false); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice(); if(v){ u.voice=v; u.lang=v.lang; } else u.lang = "nl-BE";
+    u.rate = rate || state.settings.rate || 0.85;
+    if(onBoundary) u.onboundary = e=>{ if(e.name==="word"||e.name===undefined) onBoundary(e.charIndex); };
+    let done=false; const fin=()=>{ if(!done){ done=true; res(true);} };
+    u.onend=fin; u.onerror=fin;
+    speechSynthesis.speak(u);
+    // vangnet als 'end' nooit komt
+    setTimeout(()=>{ if(!done && !speechSynthesis.speaking) fin(); }, 1500 + text.length*120/(u.rate));
+  });
+}
+function stopSpeak(){ try{ speechSynthesis.cancel(); }catch(e){} }
+
+/* ---------------- Spraak: herkennen (Chrome) ---------------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function makeRecognizer({continuous=true}={}){
+  if(!SR) return null;
+  const r = new SR(); r.lang = state.settings.lang || "nl-BE"; r.continuous = continuous; r.interimResults = true; r.maxAlternatives = 1;
+  return r;
+}
+function longListen(){
+  // Luistert tot stop() wordt opgeroepen; herstart automatisch na stiltes.
+  const ctl = {finals:[], interim:"", active:true, error:null};
+  const r = makeRecognizer({continuous:true});
+  if(!r){ ctl.error="geen-spraakherkenning"; ctl.stop=()=>Promise.resolve(ctl); return ctl; }
+  let endResolver=null;
+  r.onresult = e=>{
+    let interim="";
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const tr = e.results[i][0].transcript;
+      if(e.results[i].isFinal) ctl.finals.push(tr); else interim += tr+" ";
+    }
+    ctl.interim = interim;
+  };
+  r.onerror = e=>{
+    if(e.error==="language-not-supported" && r.lang!=="nl-NL"){ r.lang="nl-NL"; return; }
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"||e.error==="audio-capture"){ ctl.error=e.error; ctl.active=false; }
+    if(e.error==="network"){ ctl.error="network"; }
+  };
+  r.onend = ()=>{
+    if(ctl.interim){ ctl.finals.push(ctl.interim); ctl.interim=""; }
+    if(ctl.active){ try{ startSR(r); }catch(e){} }
+    else if(endResolver){ endResolver(); }
+  };
+  try{ startSR(r); }catch(e){ ctl.error="start"; }
+  ctl.stop = ()=> new Promise(res=>{
+    ctl.active=false; endResolver=()=>res(ctl);
+    try{ r.stop(); }catch(e){ res(ctl); }
+    setTimeout(()=>res(ctl), 2500);
+  });
+  return ctl;
+}
+function listenOnce(timeoutMs=6000){
+  return new Promise(res=>{
+    const r = makeRecognizer({continuous:false});
+    if(!r){ res(null); return; }
+    let best=""; let done=false; const fin=v=>{ if(!done){ done=true; try{r.stop();}catch(e){} res(v); } };
+    r.onresult = e=>{ for(let i=e.resultIndex;i<e.results.length;i++){ best = e.results[i][0].transcript; if(e.results[i].isFinal) fin(best); } };
+    r.onerror = e=>{ if(e.error==="language-not-supported" && r.lang!=="nl-NL"){ r.lang="nl-NL"; try{startSR(r);}catch(_){} return; } fin(best||null); };
+    r.onend = ()=> fin(best||null);
+    try{ startSR(r); }catch(e){ fin(null); }
+    setTimeout(()=>fin(best||null), timeoutMs);
+  });
+}
+
+/* ---------------- Microfoon: één keer openen per sessie ----------------
+   Chrome vraagt bij een lokaal bestand bij elke nieuwe aanvraag opnieuw toestemming.
+   Daarom houden we één microfoonstroom open zolang de leerling bezig is, en gebruiken
+   we die voor de test, de opname én (waar Chrome het toelaat) de spraakherkenning. */
+let micStream = null;
+function micLive(){ return !!(micStream && micStream.getAudioTracks().some(t=>t.readyState==="live")); }
+async function getMic(){
+  if(micLive()) return micStream;
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("geen-ondersteuning");
+  micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  return micStream;
+}
+function releaseMic(){ try{ micStream && micStream.getTracks().forEach(t=>t.stop()); }catch(e){} micStream=null; }
+function startSR(r){
+  const tr = micLive() ? micStream.getAudioTracks()[0] : null;
+  if(tr){ try{ r.start(tr); return; }catch(e){ /* oudere Chrome: zonder track */ } }
+  r.start();
+}
+
+/* ---------------- Opnemen ---------------- */
+async function startRecorder(){
+  if(!navigator.mediaDevices || !window.MediaRecorder) return null;
+  try{
+    const stream = await getMic();
+    const mr = new MediaRecorder(stream); const chunks=[];
+    mr.ondataavailable = e=>{ if(e.data && e.data.size) chunks.push(e.data); };
+    mr.start(1000);
+    return {
+      stop:()=> new Promise(res=>{
+        mr.onstop = ()=> res(new Blob(chunks,{type:mr.mimeType||"audio/webm"}));
+        try{ mr.stop(); }catch(e){ res(null); }
+      }),
+      cancel:()=>{ try{ mr.stop(); }catch(e){} }
+    };
+  }catch(e){ console.warn("Microfoon niet beschikbaar", e); return null; }
+}
+
+/* ---------------- Koppeling met Google Spreadsheet ---------------- */
+const Sync = {
+  busy:false, last:0, error:"", pendingPractice:{}, publishTimer:null,
+  on(){ return !!(state.settings.syncUrl && (state.settings.teacherKey || state.settings.classKey)); },
+  isTeacherDevice(){ return !!(state.settings.syncUrl && state.settings.teacherKey); },
+  key(){ return state.settings.teacherKey || state.settings.classKey; },
+  async get(params){
+    const u = new URL(state.settings.syncUrl.trim());
+    Object.entries(Object.assign({key:this.key()}, params)).forEach(([k,v])=>u.searchParams.set(k,v));
+    const r = await fetch(u.toString(), {redirect:"follow"});
+    const j = await r.json(); if(!j.ok) throw new Error(j.error||"fout"); return j;
+  },
+  async post(obj){
+    const r = await fetch(state.settings.syncUrl.trim(), {method:"POST", redirect:"follow", body:JSON.stringify(Object.assign({key:this.key()}, obj))});
+    const j = await r.json(); if(!j.ok) throw new Error(j.error||"fout"); return j;
+  },
+  enqueue(kind,id){
+    if(!this.on()) return;
+    if(!state.outbox.some(x=>x.kind===kind && x.id===id)) state.outbox.push({kind,id});
+    save(); this.flush();
+  },
+  queuePractice(sid, day, seconds){ if(!this.on()) return; this.pendingPractice[sid+"|"+day] = {sid,day,seconds}; this.flush(); },
+  async flush(){
+    if(!this.on() || this.busy || !navigator.onLine) return;
+    this.busy = true;
+    try{
+      while(state.outbox.length){
+        const job = state.outbox[0];
+        if(job.kind==="beurt"){
+          const b = state.beurten.find(x=>x.id===job.id);
+          if(b) await this.post({action:"beurt", beurt:b, row:beurtRow(b)});
+        } else if(job.kind==="audio"){
+          const blob = await AudioDB.get(job.id);
+          if(blob) await this.post({action:"audio", id:job.id, mime:blob.type||"audio/webm", b64:await blobToB64(blob)});
+        } else if(job.kind==="delete"){
+          await this.post({action:"delete", id:job.id});
+        }
+        state.outbox.shift(); save();
+      }
+      for(const [k,p] of Object.entries(this.pendingPractice)){
+        const s = student(p.sid);
+        await this.post({action:"practice", sid:p.sid, code:s?s.code:"", naam:s?s.naam:"", day:p.day, seconds:p.seconds});
+        delete this.pendingPractice[k];
+      }
+      this.error=""; this.last=Date.now();
+    }catch(e){ this.error = (e && e.message) || "geen verbinding"; console.warn("Sync", e); }
+    finally{ this.busy=false; updateSyncBadge(); }
+  },
+  pakketData(){
+    const st = state.settings;
+    return {updated:Date.now(), settings:{pin:st.pin,sessionMin:st.sessionMin,lang:st.lang,rate:st.rate,autoCheck:st.autoCheck,record:st.record,fontSize:st.fontSize},
+      normen:state.normen, tips:state.tips, students:state.students, texts:state.texts};
+  },
+  schedulePublish(){
+    if(!this.isTeacherDevice()) return;
+    clearTimeout(this.publishTimer);
+    this.publishTimer = setTimeout(()=>this.publish(true), 2500);
+  },
+  async publish(silent){
+    try{ const pk=this.pakketData(); await this.post({action:"pakket", pakket:pk}); state.pakketUpdated=pk.updated; saveRaw(); this.error=""; if(!silent) toast("Teksten en leerlingen staan klaar voor de Chromebooks."); }
+    catch(e){ this.error=e.message||"geen verbinding"; if(!silent) toast("Publiceren lukte niet: "+this.error); }
+    updateSyncBadge();
+  },
+  async pullPakket(){
+    if(!this.on() || (this.isTeacherDevice() && state.pakketUpdated)) return false;
+    try{
+      const j = await this.get({action:"pakket"}); const pk = j.pakket;
+      if(pk && pk.updated > (state.pakketUpdated||0)){
+        Object.assign(state.settings, pk.settings||{});
+        ["normen","tips","students","texts"].forEach(k=>{ if(pk[k]) state[k]=pk[k]; });
+        state.pakketUpdated = pk.updated; saveRaw(); return true;
+      }
+    }catch(e){ this.error=e.message||"geen verbinding"; }
+    return false;
+  },
+  async pullResults(showToast){
+    if(!this.isTeacherDevice()) return;
+    try{
+      const j = await this.get({action:"resultaten"}); let added=0, updated=0;
+      (j.beurten||[]).forEach(b=>{
+        const i = state.beurten.findIndex(x=>x.id===b.id);
+        if(i<0){ state.beurten.push(Object.assign({},b,{hasAudio:false,audioRemote:!!b.hasAudio})); added++; }
+        else if((b.updated||0) > (state.beurten[i].updated||0)){ state.beurten[i]=Object.assign({},b,{hasAudio:state.beurten[i].hasAudio,audioRemote:!!b.hasAudio}); updated++; }
+      });
+      (j.practice||[]).forEach(p=>{ const day=String(p.key).split("|")[1]; if(!day) return; state.practice[p.sid]=state.practice[p.sid]||{}; state.practice[p.sid][day]=Math.max(state.practice[p.sid][day]||0,p.seconds); });
+      saveRaw(); this.error=""; this.last=Date.now();
+      if(showToast) toast(added||updated? `${added} nieuwe en ${updated} bijgewerkte leesbeurten opgehaald.` : "Alles is al bijgewerkt.");
+      if(view.name==="teacher") render();
+    }catch(e){ this.error=e.message||"geen verbinding"; if(showToast) toast("Ophalen lukte niet: "+this.error); updateSyncBadge(); }
+  },
+  async fetchAudio(id){
+    if(!this.isTeacherDevice()) return null;
+    try{ const j = await this.get({action:"audio", id}); return b64ToBlob(j.b64, j.mime||"audio/webm"); }catch(e){ return null; }
+  }
+};
+function blobToB64(blob){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(",")[1]||""); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(blob); }); }
+function b64ToBlob(b64,type){ const bin=atob(b64); const a=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i); return new Blob([a],{type}); }
+function cellSafe(x){ const v = x==null? "" : x; return (typeof v==="string" && /^[=+\-@]/.test(v))? "'"+v : v; }
+function beurtRow(b){
+  const s=student(b.studentId)||{}; const c=beurtCounts(b); const m=metrics(b);
+  return [fmtDate(b.ts), s.code||"", b.title, b.level, b.words, Math.floor(b.seconds/60), b.seconds%60, c.errors, c.selfCorr,
+    tipName(b.st1), tipName(b.st2), b.probleem||"", b.opmerking||"", m.wcpm==null?"":m.wcpm, m.acc==null?"":m.acc, m.result,
+    b.checked?"nagekeken":"te controleren", s.naam||""].map(cellSafe);
+}
+function updateSyncBadge(){
+  const el=$("#syncbadge"); if(!el) return;
+  el.innerHTML = syncBadgeHTML();
+}
+function syncBadgeHTML(){
+  if(!Sync.on()) return `<span class="pill">Geen koppeling</span>`;
+  if(Sync.error) return `<span class="pill warn" title="${esc(Sync.error)}">⚠ Koppeling: ${esc(Sync.error)}${state.outbox.length?` · ${state.outbox.length} wachten`:""}</span>`;
+  return `<span class="pill ok">☁ Gekoppeld${state.outbox.length?` · ${state.outbox.length} wachten`:""}${Sync.last?` · ${pad(new Date(Sync.last).getHours())}:${pad(new Date(Sync.last).getMinutes())}`:""}</span>`;
+}
+window.addEventListener("online", ()=>Sync.flush());
+setInterval(()=>Sync.flush(), 60000);
+function randKey(n=12){ const c="abcdefghjkmnpqrstuvwxyz23456789"; let s=""; const a=new Uint32Array(n); crypto.getRandomValues(a); a.forEach(x=>s+=c[x%c.length]); return s; }
+function gasScript(){ return $("#gas-template").textContent.replace("__CLASS_KEY__", state.settings.classKey).replace("__TEACHER_KEY__", state.settings.teacherKey); }
+function bakedHTML(){
+  const S="/*BAKED-"+"START*/", E="/*BAKED-"+"END*/";
+  const a=APP_SOURCE.indexOf(S), b=APP_SOURCE.indexOf(E, a);
+  return APP_SOURCE.slice(0,a+S.length) + JSON.stringify({url:state.settings.syncUrl.trim(), classKey:state.settings.classKey}) + APP_SOURCE.slice(b);
+}
+
+/* ---------------- Toast & modal ---------------- */
+function toast(msg){ const d=document.createElement("div"); d.className="toast"; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); }
+function openModal(html){ $("#modal").innerHTML = `<div class="modalbg" data-close-bg="1"><div class="modal" role="dialog">${html}</div></div>`; }
+function closeModal(){ $("#modal").innerHTML=""; }
+function confirmBox(title, text, okLabel, onOk, danger=true){
+  openModal(`<h2>${esc(title)}</h2><p>${esc(text)}</p><div class="row" style="justify-content:flex-end;margin-top:20px"><button class="btn ghost" data-a="modal-close">Annuleer</button><button class="btn ${danger?"red":""}" id="cb-ok">${esc(okLabel)}</button></div>`);
+  $("#cb-ok").onclick = ()=>{ closeModal(); onOk(); };
+}
+document.addEventListener("click", e=>{
+  if(e.target.matches && e.target.matches("[data-close-bg]")) closeModal();
+});
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+let view = {name:"home"};
+let session = null;      // actieve leerlingsessie {sid, tick}
+let reading = null;      // actieve leesbeurt
+function go(v){ stopSpeak(); if(view.name==="miccheck" && v.name!=="miccheck") micStop(); view = v; render(); window.scrollTo(0,0); }
+
+function render(){
+  const app = $("#app");
+  if(view.name==="home") app.innerHTML = vHome();
+  else if(view.name==="miccheck") app.innerHTML = vMicCheck();
+  else if(view.name==="student") app.innerHTML = vStudent();
+  else if(view.name==="reader") app.innerHTML = vReader();
+  else if(view.name==="result") app.innerHTML = vResult();
+  else if(view.name==="practice") app.innerHTML = vPractice();
+  else if(view.name==="teacher") app.innerHTML = vTeacher();
+  afterRender();
+}
+
+/* ---------- Home ---------- */
+function vHome(){
+  return `<div class="wrap">
+    <div class="hello">Wie gaat er lezen? 📖</div>
+    <div class="muted" style="font-size:18px">Tik op je naam.</div>
+    <div class="kids">
+      ${state.students.map(s=>`<button class="kid" data-a="pick-student" data-id="${s.id}">
+        <div class="avatar" style="background:${s.color}">${esc(initials(s.naam))}</div>${esc(s.naam)}</button>`).join("")}
+    </div>
+    ${!storageOK?`<p class="banner" style="margin-top:24px">Let op: deze browser bewaart geen gegevens. Open de app als gewoon bestand in Chrome (niet in incognito).</p>`:""}
+    <div class="small muted" style="position:fixed;left:18px;bottom:20px">Leesapp ${APP_VERSION}${location.protocol==="file:"?" · lokaal bestand":""}</div>
+    <button class="btn ghost small corner" data-a="teacher-login">🔒 Leerkracht</button>
+  </div>`;
+}
+
+/* ---------- Leerling: microfoon testen (eerst, vóór alles) ---------- */
+let micOKFor = null;   // leerling-id waarvoor de microfoon in deze sessie getest is
+let micT = null;       // lopende test
+function needsMic(){ return !!(state.settings.record || state.settings.autoCheck); }
+function vMicCheck(){
+  const s = student(view.sid); if(!s) return vHome();
+  return `<div class="wrap">
+    <div class="topbar"><button class="btn ghost" data-a="home">← Terug</button>
+      <div class="avatar" style="background:${s.color};width:52px;height:52px;font-size:22px">${esc(initials(s.naam))}</div>
+      <h1>Hoi ${esc(s.naam)}! Eerst je microfoon testen 🎤</h1></div>
+    <div class="card" style="max-width:760px">
+      <div class="step" id="st1"><div class="stepnum">1</div><div style="flex:1">
+        <div style="font-size:20px;font-weight:600">Zet je koptelefoon op.</div>
+        <div class="muted">Hoor je de stem? <button class="btn small light" data-a="mic-hear">🔊 Luister</button></div></div></div>
+      <div class="step" id="st2"><div class="stepnum">2</div><div style="flex:1">
+        <div style="font-size:20px;font-weight:600">Tik op de knop. Kies <b>Toestaan</b> als Chrome het vraagt.</div>
+        <div style="margin-top:10px"><button class="btn big green" data-a="mic-start" id="mic-btn">🎤 Start de test</button></div>
+        <div id="mic-perm" class="small" style="margin-top:8px"></div></div></div>
+      <div class="step" id="st3"><div class="stepnum">3</div><div style="flex:1">
+        <div style="font-size:20px;font-weight:600">Zeg hardop: <i>"Ik ben klaar om te lezen!"</i></div>
+        <div class="meter"><div id="mic-level"></div></div>
+        <div id="mic-heard" class="muted"></div></div></div>
+      <div style="margin-top:18px;text-align:center">
+        <div id="mic-result" class="feedback"></div>
+        <button class="btn big" data-a="mic-continue" id="mic-go" disabled>Verder ▶</button>
+        <div id="mic-skipbox" class="hidden" style="margin-top:14px"><p class="muted">Lukt het niet? Roep je juf of meester.</p>
+          <button class="btn ghost small" data-a="mic-skip">Toch verder zonder microfoon</button></div>
+      </div>
+    </div></div>`;
+}
+function stepState(id, cls){ const el=$("#"+id); if(el){ el.classList.remove("ok","bad"); if(cls) el.classList.add(cls); } }
+function micStop(){
+  if(!micT) return;
+  micT.stopped = true;
+  try{ cancelAnimationFrame(micT.raf); }catch(e){}
+  try{ micT.ac && micT.ac.close(); }catch(e){}
+  micT = null;
+}
+async function micStart(){
+  micStop();
+  const perm=$("#mic-perm"), btn=$("#mic-btn"), res=$("#mic-result"), heard=$("#mic-heard");
+  if(btn) btn.disabled = true;
+  if(perm){ perm.textContent = "Even wachten…"; perm.style.color="var(--muted)"; }
+  const T = micT = {stopped:false, soundOK:false, asrOK:false, asrDone:false};
+  let stream;
+  try{
+    stream = await getMic();
+  }catch(e){
+    stepState("st2","bad");
+    if(perm){ perm.innerHTML = `<b style="color:var(--red)">De microfoon mag niet gebruikt worden.</b><br>Klik bovenaan in de adresbalk op het slotje of het microfoon-icoon → <b>Microfoon: Toestaan</b>. Laad daarna de pagina opnieuw (Ctrl + R).`; }
+    if(btn){ btn.disabled=false; btn.textContent="🔁 Probeer opnieuw"; }
+    $("#mic-skipbox")?.classList.remove("hidden");
+    micT = null; return;
+  }
+  if(T.stopped) return;
+  T.stream = stream;
+  stepState("st2","ok"); if(perm){ perm.textContent = "✅ Microfoon toegestaan."; perm.style.color="var(--green)"; }
+  if(btn) btn.textContent = "🎤 Ik luister…";
+  // Geluidsniveau tonen
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC(); T.ac = ac;
+    const an = ac.createAnalyser(); an.fftSize = 1024; ac.createMediaStreamSource(stream).connect(an);
+    const buf = new Uint8Array(an.fftSize); let loud = 0;
+    const loop = ()=>{
+      if(T.stopped) return;
+      an.getByteTimeDomainData(buf); let sum=0; for(let i=0;i<buf.length;i++){ const v=(buf[i]-128)/128; sum+=v*v; }
+      const rms = Math.sqrt(sum/buf.length); const lv=$("#mic-level"); if(lv) lv.style.width = Math.min(100, rms*400)+"%";
+      if(rms>0.035) loud++;
+      if(!T.soundOK && loud>12){ T.soundOK = true; micCheckDone(T); }
+      T.raf = requestAnimationFrame(loop);
+    };
+    loop();
+  }catch(e){ T.soundOK = true; }
+  // Spraakherkenning testen (alleen als automatisch nakijken aan staat)
+  if(state.settings.autoCheck && SR){
+    listenOnce(9000).then(t=>{
+      if(T.stopped) return;
+      T.asrDone = true; T.asrOK = !!t;
+      if(heard) heard.innerHTML = t? `De app hoorde: <b style="color:var(--ink)">"${esc(t)}"</b>` : `<span style="color:var(--amber)">De app kon je woorden niet herkennen (internet?). Je leerkracht kijkt je lezen dan zelf na.</span>`;
+      micCheckDone(T);
+    });
+  } else { T.asrDone = true; }
+  setTimeout(()=>{ if(micT===T && !T.soundOK){ const r=$("#mic-result"); if(r){ r.textContent="Ik hoor nog niets. Spreek wat luider of kijk of de microfoon niet uit staat."; r.style.color="var(--amber)"; } $("#mic-skipbox")?.classList.remove("hidden"); const b=$("#mic-btn"); if(b){ b.disabled=false; b.textContent="🔁 Probeer opnieuw"; } } }, 8000);
+}
+function micCheckDone(T){
+  if(T.stopped || !T.soundOK) return;
+  const res=$("#mic-result"), go=$("#mic-go");
+  stepState("st3","ok");
+  if(res){ res.textContent = "Je microfoon werkt! ✅"; res.style.color="var(--green)"; }
+  if(go) go.disabled = false;
+  $("#mic-skipbox")?.classList.add("hidden");
+  const b=$("#mic-btn"); if(b){ b.textContent = "✅ Getest"; }
+}
+
+/* ---------- Leerling: startscherm ---------- */
+function stopBtn(disabled){ return `<button class="btn stop small" data-a="session-stop" ${disabled?"disabled":""}>⏹ Stop oefenbeurt</button>`; }
+function timerHTML(sid){
+  const total = (state.settings.sessionMin||25)*60, used = practiceToday(sid);
+  const left = Math.max(0,total-used), p = Math.min(100, used/total*100);
+  return `<div class="timerbox" id="timerbox">⏱️ <span id="timerleft">${left>0?("Nog "+Math.ceil(left/60)+" min"):(Math.round(total/60)+" min geoefend ✓")}</span><div class="timerbar"><div id="timerfill" style="width:${p}%"></div></div></div>`;
+}
+function vStudent(){
+  const s = student(view.sid); if(!s) return vHome();
+  const texts = s.assigned.map(textById).filter(Boolean);
+  const words = practiceWordsFor(s.id);
+  return `<div class="wrap">
+    <div class="topbar">
+      <button class="btn ghost" data-a="home">← Terug</button>
+      <div class="avatar" style="background:${s.color};width:52px;height:52px;font-size:22px">${esc(initials(s.naam))}</div>
+      <h1>Hoi ${esc(s.naam)}!</h1><div class="spacer"></div>${timerHTML(s.id)}${stopBtn()}
+    </div>
+    <h2 style="margin:8px 0 12px">Mijn teksten</h2>
+    ${texts.length? `<div class="tiles">${texts.map(t=>{
+        const prev = beurtenVan(s.id).filter(b=>b.textId===t.id);
+        const best = prev.length? Math.min(...prev.map(b=>b.seconds)) : null;
+        return `<button class="tile" data-a="open-text" data-id="${t.id}">
+          <span class="pill">AVI ${esc(t.level)}</span><h3>${esc(t.title)}</h3>
+          <span class="muted">${wordsOf(t.body).length} woorden${prev.length?` · ${prev.length}× gelezen · beste tijd ${fmtSec(best)}`:" · nog niet gelezen"}</span>
+        </button>`;}).join("")}</div>`
+      : `<div class="card muted">Je juf of meester heeft nog geen tekst voor jou klaargezet.</div>`}
+    <h2 style="margin:28px 0 12px">Woorden oefenen</h2>
+    ${words.length? `<button class="tile" style="max-width:420px" data-a="practice">
+        <h3>🎯 ${words.length} moeilijke woorden</h3><span class="muted">Luister, lees en zeg ze hardop.</span></button>`
+      : `<div class="card muted">Nog geen oefenwoorden. Lees eerst een tekst!</div>`}
+  </div>`;
+}
+function practiceWordsFor(sid){
+  const set = new Map();
+  beurtenVan(sid).slice(-4).reverse().forEach(b=>{
+    const ws = wordsOf(b.bodySnapshot || textById(b.textId)?.body || "");
+    (b.marks||[]).forEach((m,i)=>{ if((m==="fout"||m==="overgeslagen") && ws[i]) { const k=norm(ws[i]); if(k && !set.has(k)) set.set(k, ws[i]); } });
+    String(b.probleem||"").split(/[,;]+/).map(x=>x.trim()).filter(Boolean).forEach(w=>{ const k=norm(w); if(k && !set.has(k)) set.set(k,w); });
+  });
+  return [...set.values()].slice(0,12);
+}
+
+/* ---------- Leerling: lezen ---------- */
+function vReader(){
+  const s = student(view.sid), t = textById(view.tid);
+  const toks = tokenize(t.body);
+  const fs = view.fontSize || state.settings.fontSize || 28;
+  const ph = view.phase || "idle";
+  let controls = "";
+  if(ph==="idle"){
+    controls = `<div class="choices">
+        <div><button class="btn big orange" data-a="tts-all">🔊 Eerst voorlezen</button><div class="hint">De app leest de tekst voor.<br>Jij leest mee.</div></div>
+        <div><button class="btn big light" data-a="tts-echo">🔁 Om beurten</button><div class="hint">De app leest een zin.<br>Jij leest hem na.</div></div>
+        <div><button class="btn big green" data-a="read-start">🎤 Ik ga zelf lezen</button><div class="hint">Jij leest de hele tekst hardop.<br>Klaar? Tik op ✅.</div></div>
+      </div>`;
+  } else if(ph==="tts"){
+    controls = `<span class="bigmsg">🔊 Luister goed en lees mee…</span><button class="btn light" data-a="tts-stop">⏹ Stop</button>`;
+  } else if(ph==="echo-listen"){
+    controls = `<span class="bigmsg">🔊 Luister…</span><button class="btn light" data-a="tts-stop">⏹ Stop</button>`;
+  } else if(ph==="echo-you"){
+    controls = `<span class="bigmsg">Nu jij! Lees de gele zin hardop.</span>
+      <button class="btn big" data-a="echo-next">Volgende zin ▶</button>
+      <button class="btn light" data-a="echo-again">🔊 Nog eens</button>
+      <button class="btn ghost" data-a="tts-stop">Stop</button>`;
+  } else if(ph==="countdown"){
+    controls = `<div style="flex-basis:100%"><span class="bigmsg" id="countdown">Klaar? 3…</span>
+      <div class="muted" style="font-size:18px;margin-top:6px">Lees straks de hele tekst hardop. Ben je aan het einde? Tik dan op <b>✅ Ik ben klaar met lezen</b>.</div></div>`;
+  } else if(ph==="reading"){
+    controls = `<div class="readbar" style="flex-basis:100%">
+        <div class="row"><div class="recdot"></div><span class="bigmsg">Lees de tekst hardop, van het begin tot het einde.</span></div>
+        <div style="font-size:18px">Heb je de laatste zin gelezen? Tik dan op de groene knop.</div>
+        <div class="row"><button class="btn big green" data-a="read-done">✅ Ik ben klaar met lezen</button>
+        <button class="btn ghost" data-a="read-cancel">↺ Opnieuw beginnen</button></div></div>`;
+  } else if(ph==="saving"){
+    controls = `<span class="bigmsg">Even nakijken… ⏳</span>`;
+  }
+  return `<div class="wrap">
+    <div class="topbar">
+      <button class="btn ghost" data-a="back-student" ${ph==="reading"||ph==="saving"?"disabled":""}>← Terug</button>
+      <h1>${esc(t.title)}</h1><span class="pill">AVI ${esc(t.level)}</span><div class="spacer"></div>
+      <button class="btn ghost small" data-a="font-" title="Kleiner">A−</button><button class="btn ghost small" data-a="font+" title="Groter">A+</button>
+      ${timerHTML(s.id)}${stopBtn(ph==="reading"||ph==="saving"||ph==="countdown")}
+    </div>
+    <div class="controls">${controls}</div>
+    ${reading && reading.warn?`<div class="banner">${esc(reading.warn)}</div>`:""}
+    <div class="reader" id="reader" style="font-size:${fs}px">${toks.map(tk=>tk.t==="w"?`<span class="w" data-wi="${tk.i}">${esc(tk.s)}</span>`:esc(tk.s)).join("")}</div>
+  </div>`;
+}
+function sentencesOf(body){
+  const toks = tokenize(body); const sents=[]; let cur={text:"",words:[]};
+  toks.forEach(tk=>{
+    if(tk.t==="w"){ cur.words.push({i:tk.i,start:cur.text.length}); cur.text+=tk.s; }
+    else { cur.text+=tk.s; if(/[.!?]/.test(tk.s) && cur.words.length){ sents.push(cur); cur={text:"",words:[]}; } }
+  });
+  if(cur.words.length) sents.push(cur);
+  return sents;
+}
+function hlSentence(sent){
+  document.querySelectorAll("#reader .w").forEach(el=>el.classList.remove("sent","now"));
+  if(!sent) return;
+  sent.words.forEach(w=>{ const el=document.querySelector(`#reader .w[data-wi="${w.i}"]`); if(el) el.classList.add("sent"); });
+  const first = document.querySelector(`#reader .w[data-wi="${sent.words[0].i}"]`); if(first) first.scrollIntoView({block:"center",behavior:"smooth"});
+}
+function hlWord(sent, charIndex){
+  let target=null; sent.words.forEach(w=>{ if(w.start<=charIndex) target=w; });
+  document.querySelectorAll("#reader .w.now").forEach(el=>el.classList.remove("now"));
+  if(target){ const el=document.querySelector(`#reader .w[data-wi="${target.i}"]`); if(el) el.classList.add("now"); }
+}
+let ttsRun = 0;
+async function ttsAll(){
+  const t = textById(view.tid); const sents = sentencesOf(t.body); const run = ++ttsRun;
+  if(!pickVoice() && !voicesCache.length) toast("Geen Nederlandse stem gevonden – kies er een bij Instellingen.");
+  view.phase="tts"; render();
+  for(const s of sents){
+    if(run!==ttsRun) return;
+    hlSentence(s);
+    await speak(s.text,{onBoundary:ci=>hlWord(s,ci)});
+  }
+  if(run===ttsRun){ hlSentence(null); view.phase="idle"; render(); toast("Nu mag jij lezen! Tik op 🎤 Ik ga zelf lezen."); }
+}
+async function echoStep(again){
+  const t = textById(view.tid); const sents = sentencesOf(t.body); const run = ++ttsRun;
+  if(!again) view.echoIdx = (view.echoIdx==null? 0 : view.echoIdx+1);
+  if(view.echoIdx>=sents.length){ view.phase="idle"; view.echoIdx=null; render(); toast("Goed gedaan! Lees nu de hele tekst zelf. 🎤"); return; }
+  view.phase="echo-listen"; render();
+  const s = sents[view.echoIdx]; hlSentence(s);
+  await speak(s.text,{onBoundary:ci=>hlWord(s,ci)});
+  if(run!==ttsRun) return;
+  view.phase="echo-you"; render(); hlSentence(s);
+}
+async function readStart(){
+  stopSpeak(); ttsRun++;
+  reading = {sid:view.sid, tid:view.tid, warn:""};
+  view.phase="countdown"; render();
+  for(const n of ["3…","2…","1…","Lezen maar! 🎤"]){ const el=$("#countdown"); if(el) el.textContent = n==="Lezen maar! 🎤"? n : "Klaar? "+n; await new Promise(r=>setTimeout(r,700)); }
+  if(!reading) return;
+  if(state.settings.record) reading.rec = await startRecorder();
+  if(state.settings.autoCheck){
+    reading.listen = longListen();
+    if(reading.listen.error==="geen-spraakherkenning") reading.warn = "Deze browser kan niet automatisch nakijken. Je leerkracht kijkt je lezen na.";
+  }
+  if(state.settings.record && !reading.rec) reading.warn = (reading.warn? reading.warn+" ":"") + "De microfoon werkt niet (toestemming gegeven?). De tijd wordt wel gemeten.";
+  reading.start = performance.now(); reading.startTs = Date.now();
+  view.phase="reading"; render();
+}
+async function readCancel(){
+  if(!reading) return;
+  if(reading.listen && reading.listen.stop) reading.listen.stop();
+  if(reading.rec) reading.rec.cancel();
+  reading=null; view.phase="idle"; render();
+}
+async function readDone(){
+  if(!reading) return;
+  const seconds = Math.round((performance.now()-reading.start)/1000);
+  view.phase="saving"; render();
+  const [ctl, blob] = await Promise.all([
+    reading.listen? reading.listen.stop() : Promise.resolve(null),
+    reading.rec? reading.rec.stop() : Promise.resolve(null)
+  ]);
+  const t = textById(reading.tid), ws = wordsOf(t.body);
+  const b = {id:uid(), studentId:reading.sid, textId:t.id, title:t.title, level:t.level, words:ws.length, bodySnapshot:t.body,
+    seconds, ts:reading.startTs, method:"app", checked:false, st1:"", st2:"", probleem:"", opmerking:"", insertions:0, repetitions:0,
+    marks:null, transcript:"", asrError:"", hasAudio:false};
+  if(ctl){
+    const transcript = ctl.finals.join(" ").trim();
+    b.transcript = transcript; b.asrError = ctl.error||"";
+    if(transcript){
+      const al = align(ws, transcript.split(/\s+/));
+      b.marks = al.marks; b.insertions = al.insertions; b.repetitions = al.repetitions;
+    } else if(!ctl.error){ b.asrError = "niets gehoord"; }
+  }
+  if(!b.marks){ b.marks = new Array(ws.length).fill("juist"); b.autoFailed = true; if(!state.settings.autoCheck) b.asrError = "automatisch nakijken staat uit"; }
+  const sug = suggestStruik(b); b.st1 = sug[0]; b.st2 = sug[1];
+  b.probleem = probleemFromMarks(b).join(", ");
+  if(blob && blob.size){ await AudioDB.put(b.id, blob); b.hasAudio = true; }
+  b.updated = Date.now();
+  state.beurten.push(b); save();
+  Sync.enqueue("beurt", b.id); if(b.hasAudio) Sync.enqueue("audio", b.id);
+  reading = null;
+  go({name:"result", sid:b.studentId, bid:b.id});
+}
+function probleemFromMarks(b){
+  const ws = wordsOf(b.bodySnapshot || textById(b.textId)?.body || ""); const out=[]; const seen=new Set();
+  (b.marks||[]).forEach((m,i)=>{ if((m==="fout"||m==="overgeslagen") && ws[i]){ const k=norm(ws[i]); if(!seen.has(k)){ seen.add(k); out.push(ws[i]); } } });
+  return out;
+}
+
+/* ---------- Leerling: resultaat ---------- */
+function vResult(){
+  const s = student(view.sid); const b = state.beurten.find(x=>x.id===view.bid);
+  if(!b) return vStudent();
+  const m = metrics(b);
+  const prev = beurtenVan(s.id).filter(x=>x.textId===b.textId && x.id!==b.id);
+  const prevBest = prev.length? Math.min(...prev.map(x=>x.seconds)) : null;
+  const faster = prevBest!=null && b.seconds < prevBest;
+  const words = b.autoFailed? [] : probleemFromMarks(b).slice(0,8);
+  return `<div class="wrap">
+    <div class="topbar"><h1>Goed gedaan, ${esc(s.naam)}! 🎉</h1><div class="spacer"></div>${timerHTML(s.id)}${stopBtn()}</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+      <div class="card" style="text-align:center"><div class="muted">Je leestijd</div><div style="font-size:48px;font-weight:700;color:var(--teal)">${fmtSec(b.seconds)}</div>
+        ${prevBest!=null? (faster? `<div class="pill ok">⚡ Sneller dan vorige keer (${fmtSec(prevBest)})!</div>` : `<div class="muted">Je beste tijd: ${fmtSec(prevBest)}</div>`) : `<div class="muted">Eerste keer voor deze tekst</div>`}
+      </div>
+      <div class="card" style="text-align:center"><div class="muted">Woorden per minuut</div><div style="font-size:48px;font-weight:700;color:var(--teal)">${m.wcpm!=null && !b.autoFailed? m.wcpm : Math.round(b.words/(b.seconds/60))}</div>
+        <div class="muted">${b.autoFailed? "Je leerkracht kijkt je lezen nog na." : "Je leerkracht kijkt dit nog eens na."}</div></div>
+    </div>
+    ${words.length? `<div class="card" style="margin-top:18px"><h2 style="margin-top:0">Deze woorden zijn nog moeilijk</h2>
+      <div class="chips">${words.map(w=>`<button class="chip" data-a="say-word" data-w="${esc(w)}">🔊 ${esc(w)}</button>`).join("")}</div>
+      <div style="margin-top:16px"><button class="btn orange big" data-a="practice">🎯 Oefen deze woorden</button></div></div>`:""}
+    <div class="row" style="margin-top:20px">
+      <button class="btn big light" data-a="open-text" data-id="${b.textId}">🔁 Nog eens lezen</button>
+      <button class="btn big ghost" data-a="back-student">Naar mijn teksten</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- Leerling: woorden oefenen ---------- */
+function vPractice(){
+  const s = student(view.sid); const words = view.words || practiceWordsFor(s.id);
+  view.words = words; const i = view.pi||0;
+  if(!words.length) return vStudent();
+  if(i>=words.length){
+    return `<div class="wrap"><div class="topbar"><h1>Woorden oefenen</h1><div class="spacer"></div>${timerHTML(s.id)}${stopBtn()}</div>
+      <div class="card" style="text-align:center;padding:40px"><div class="star">⭐</div><div class="bigmsg">Alle woorden geoefend!</div>
+      <div class="row" style="justify-content:center;margin-top:20px"><button class="btn big light" data-a="practice-restart">Nog een keer</button><button class="btn big" data-a="back-student">Naar mijn teksten</button></div></div></div>`;
+  }
+  const w = words[i];
+  return `<div class="wrap">
+    <div class="topbar"><button class="btn ghost" data-a="back-student">← Terug</button><h1>Woorden oefenen</h1><span class="muted">${i+1} / ${words.length}</span><div class="spacer"></div>${timerHTML(s.id)}${stopBtn()}</div>
+    <div class="card" style="padding:30px">
+      <div class="practiceword" id="pword">${esc(w)}</div>
+      <div class="feedback" id="pfeedback"></div>
+      <div class="row" style="justify-content:center;margin-top:16px">
+        <button class="btn big orange" data-a="say-word" data-w="${esc(w)}">🔊 Luister</button>
+        <button class="btn big light" data-a="say-word-slow" data-w="${esc(w)}">🐢 Langzaam</button>
+        ${SR? `<button class="btn big green" data-a="practice-say" id="psay">🎤 Zeg het</button>`:""}
+        <button class="btn big" data-a="practice-next">Volgende ▶</button>
+      </div>
+      <p class="muted" style="text-align:center;margin-top:18px">Tip: lees het woord eerst in stukjes, dan in één keer.</p>
+    </div></div>`;
+}
+async function practiceSay(){
+  const w = view.words[view.pi||0]; const fb = $("#pfeedback"); const btn=$("#psay");
+  if(btn) btn.disabled=true; if(fb){ fb.textContent="🎤 Ik luister…"; fb.style.color="var(--teal)"; }
+  const heard = await listenOnce(6000);
+  if(btn) btn.disabled=false;
+  if(!fb) return;
+  if(!heard){ fb.textContent="Ik hoorde niets. Probeer nog eens!"; fb.style.color="var(--amber)"; return; }
+  const ok = heard.split(/\s+/).some(h=>{ const a=norm(h), b=norm(w); return a===b || (b.length>=5 && lev(a,b)<=1); }) || norm(heard)===norm(w);
+  fb.textContent = ok? "Super! ✅" : `Bijna! Luister nog eens en probeer opnieuw.`;
+  fb.style.color = ok? "var(--green)" : "var(--amber)";
+}
+
+/* ============================================================
+   LEERKRACHT
+   ============================================================ */
+const TABS = [["overzicht","Klasoverzicht"],["beurten","Leesbeurten"],["teksten","Teksten"],["leerlingen","Leerlingen"],["struikel","Struikelpunten"],["normen","Normen & tips"],["gegevens","Gegevens"],["instellingen","Instellingen"]];
+function vTeacher(){
+  const tab = view.tab||"overzicht";
+  const body = {overzicht:tOverzicht,beurten:tBeurten,teksten:tTeksten,leerlingen:tLeerlingen,struikel:tStruikel,normen:tNormen,gegevens:tGegevens,instellingen:tInstellingen}[tab]();
+  return `<div class="wrap">
+    <div class="topbar"><h1>Leerkracht</h1><div class="spacer"></div><span id="syncbadge">${syncBadgeHTML()}</span>${Sync.isTeacherDevice()?`<button class="btn light small" data-a="pull">⟳ Resultaten ophalen</button>`:""}<button class="btn ghost" data-a="home">🔓 Afmelden</button></div>
+    <div class="tabs">${TABS.map(([k,l])=>`<button class="tab ${k===tab?"on":""}" data-a="tab" data-tab="${k}">${l}${k==="beurten"&&state.beurten.some(b=>!b.checked)?` <span class="pill warn">${state.beurten.filter(b=>!b.checked).length}</span>`:""}</button>`).join("")}</div>
+    ${body}
+  </div>`;
+}
+function spark(vals){
+  const v = vals.filter(x=>x!=null); if(v.length<2) return "";
+  const w=120,h=32,mx=Math.max(...v),mn=Math.min(...v),rg=(mx-mn)||1;
+  const pts=v.map((x,i)=>`${(i/(v.length-1)*(w-6)+3).toFixed(1)},${(h-3-(x-mn)/rg*(h-6)).toFixed(1)}`).join(" ");
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-label="verloop woorden per minuut"><polyline fill="none" stroke="#2E7D8A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${pts}"/><circle cx="${pts.split(" ").pop().split(",")[0]}" cy="${pts.split(" ").pop().split(",")[1]}" r="3.5" fill="#E07B39"/></svg>`;
+}
+function tOverzicht(){
+  const unchecked = state.beurten.filter(b=>!b.checked).length;
+  return `${unchecked?`<div class="banner">Er ${unchecked===1?"is 1 leesbeurt":"zijn "+unchecked+" leesbeurten"} nog niet door jou nagekeken. De cijfers hieronder tellen ze al mee. <button class="btn small" data-a="tab" data-tab="beurten">Nakijken</button></div>`:""}
+  <div class="studentcards">${state.students.map(s=>{
+    const S = summary(s); const pt = practiceToday(s.id); const total=(state.settings.sessionMin||25)*60;
+    return `<div class="scard">
+      <h3><span class="mini" style="background:${s.color}">${esc(initials(s.naam))}</span>${esc(s.naam)} <span class="muted small">(${esc(s.code)})</span></h3>
+      <div class="row small"><span class="pill">Streef: ${esc(s.streef||"–")}</span>${S.reached?`<span class="pill ${S.reached==="Ja"?"ok":"warn"}">${S.reached==="Ja"?"Streefniveau bereikt":"Nog niet bereikt"}</span>`:""}</div>
+      <div class="small muted">Oefentijd vandaag: <b style="color:var(--ink)">${Math.round(pt/60)} / ${Math.round(total/60)} min</b></div>
+      ${S.n? `<div class="kv">
+        <span>Aantal beurten</span><span>${S.n}</span>
+        <span>Laatste beurt</span><span>${fmtDate(S.last.ts)}</span>
+        <span>Laatst gelezen niveau</span><span>${esc(S.last.level)}</span>
+        <span>Laatste resultaat</span><span><span class="pill ${S.lastM.result}">${S.lastM.result||"–"}</span></span>
+        <span>Gem. nauwkeurigheid</span><span>${pct(S.avgAcc)}</span>
+        <span>Gem. woorden correct/min</span><span>${S.avgW??"–"}</span>
+        <span>Hoogste beheerste niveau</span><span>${esc(S.highest)}</span>
+        <span>Grootste struikelpunt</span><span style="text-align:right">${S.top==="-"?"–":esc(tipName(S.top))}</span>
+      </div>
+      <div>${spark(S.bs.map(b=>metrics(b).wcpm))}</div>
+      <div class="small"><b>Advies volgende tekst:</b> ${esc(S.advies||"–")}</div>
+      ${S.tip?`<div class="tip"><b>Tip:</b> ${esc(S.tip)}</div>`:""}`
+      : `<div class="muted small">Nog geen leesbeurten.</div>`}
+    </div>`;}).join("")}</div>
+  <h3 style="margin-top:28px">Klasoverzicht als tabel</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Code</th><th>Naam</th><th>Streef</th><th class="num">Beurten</th><th>Laatste beurt</th><th>Laatst niveau</th><th>Laatste resultaat</th><th class="num">Gem. nauwk.</th><th class="num">Gem. wcpm</th><th>Hoogste beheerst</th><th>Bereikt?</th><th>Grootste struikelpunt</th><th>Advies</th></tr>
+    ${state.students.map(s=>{ const S=summary(s); return `<tr><td>${esc(s.code)}</td><td>${esc(s.naam)}</td><td>${esc(s.streef)}</td><td class="num">${S.n}</td>
+      <td>${S.n?fmtDate(S.last.ts):""}</td><td>${S.n?esc(S.last.level):""}</td><td>${S.n?`<span class="pill ${S.lastM.result}">${S.lastM.result}</span>`:""}</td>
+      <td class="num">${S.n?pct(S.avgAcc):""}</td><td class="num">${S.n?(S.avgW??""):""}</td><td>${S.n?esc(S.highest):""}</td><td>${S.n?S.reached:""}</td>
+      <td>${S.n?(S.top==="-"?"–":esc(tipName(S.top))):""}</td><td>${S.n?esc(S.advies):""}</td></tr>`;}).join("")}
+  </table></div>`;
+}
+function tBeurten(){
+  const f = view.filter||"";
+  const bs = state.beurten.filter(b=>!f||b.studentId===f).sort((a,b)=>b.ts-a.ts);
+  return `<div class="row" style="margin-bottom:14px">
+    <label class="f" style="min-width:200px">Leerling<select data-a="filter">${[`<option value="">Alle leerlingen</option>`].concat(state.students.map(s=>`<option value="${s.id}" ${f===s.id?"selected":""}>${esc(s.naam)}</option>`)).join("")}</select></label>
+    <div class="spacer"></div><button class="btn" data-a="manual-new">＋ Leesbeurt handmatig toevoegen</button></div>
+  ${bs.length? `<div class="tablewrap"><table>
+    <tr><th>Datum</th><th>Leerling</th><th>Tekst</th><th>Niveau</th><th class="num">Woorden</th><th class="num">Tijd</th><th class="num">Fouten</th><th class="num">Zelfcorr.</th><th class="num">Wcpm</th><th class="num">Nauwk.</th><th>Resultaat</th><th>Struikelpunten</th><th>Status</th><th></th></tr>
+    ${bs.map(b=>{ const m=metrics(b), s=student(b.studentId); return `<tr>
+      <td>${fmtDateTime(b.ts)}</td><td>${esc(s?s.naam:"?")}</td><td>${esc(b.title)}</td><td>${esc(b.level)}</td><td class="num">${b.words}</td><td class="num">${fmtSec(b.seconds)}</td>
+      <td class="num">${m.errors}</td><td class="num">${m.selfCorr}</td><td class="num">${m.wcpm??""}</td><td class="num">${pct(m.acc)}</td><td><span class="pill ${m.result}">${m.result}</span></td>
+      <td class="small">${esc([tipName(b.st1),tipName(b.st2)].filter(Boolean).join(" · "))}</td>
+      <td>${b.checked?`<span class="pill ok">nagekeken</span>`:`<span class="pill warn">${b.autoFailed?"zelf nakijken":"te controleren"}</span>`}${b.method==="handmatig"?` <span class="pill">handmatig</span>`:""}</td>
+      <td><button class="btn small" data-a="review" data-id="${b.id}">${b.checked?"Bekijk":"Nakijken"}</button></td></tr>`;}).join("")}
+  </table></div>` : `<div class="card muted">Nog geen leesbeurten. Laat een leerling een tekst lezen, of voeg een beurt handmatig toe.</div>`}`;
+}
+function tTeksten(){
+  return `<div class="row" style="margin-bottom:14px"><div class="muted">Teksten die je hier toevoegt, kan je bij <b>Leerlingen</b> toewijzen.</div><div class="spacer"></div><button class="btn" data-a="text-new">＋ Nieuwe tekst</button></div>
+  <div class="tablewrap"><table><tr><th>Titel</th><th>AVI-niveau</th><th class="num">Woorden</th><th>Bron</th><th>Toegewezen aan</th><th></th></tr>
+  ${state.texts.map(t=>`<tr><td><b>${esc(t.title)}</b><div class="small muted">${esc(t.body.slice(0,90))}…</div></td><td>${esc(t.level)}</td><td class="num">${wordsOf(t.body).length}</td><td>${esc(t.source||"")}</td>
+    <td class="small">${esc(state.students.filter(s=>s.assigned.includes(t.id)).map(s=>s.naam).join(", ")||"–")}</td>
+    <td><button class="btn small light" data-a="text-edit" data-id="${t.id}">Bewerk</button></td></tr>`).join("")}</table></div>`;
+}
+function textForm(t){
+  return `<h2>${t.id?"Tekst bewerken":"Nieuwe tekst"}</h2>
+  <div class="formgrid" style="grid-template-columns:2fr 1fr 2fr">
+    <label class="f">Titel<input id="tf-title" value="${esc(t.title||"")}"></label>
+    <label class="f">AVI-niveau<select id="tf-level">${state.normen.levels.map(l=>`<option ${l.lv===(t.level||"M5")?"selected":""}>${l.lv}</option>`).join("")}</select></label>
+    <label class="f">Bron<input id="tf-source" value="${esc(t.source||"")}" placeholder="bv. eigen tekst, leesboek p. 12"></label>
+  </div>
+  <label class="f" style="margin-top:12px">Tekst (plak of typ)<textarea id="tf-body" rows="12" style="font-size:17px;line-height:1.6">${esc(t.body||"")}</textarea></label>
+  <div class="muted small" id="tf-count" style="margin-top:6px">${wordsOf(t.body||"").length} woorden</div>
+  <div style="margin-top:12px"><div class="small muted" style="margin-bottom:6px">Toewijzen aan:</div><div class="row">${state.students.map(s=>`<label class="row small" style="gap:6px"><input type="checkbox" class="tf-as" value="${s.id}" ${t.id&&s.assigned.includes(t.id)?"checked":""}> ${esc(s.naam)}</label>`).join("")}</div></div>
+  <div class="row" style="margin-top:20px">${t.id?`<button class="btn red" data-a="text-del" data-id="${t.id}">Verwijder</button>`:""}<div class="spacer"></div>
+    <button class="btn ghost" data-a="modal-close">Annuleer</button><button class="btn" data-a="text-save" data-id="${t.id||""}">Bewaar</button></div>`;
+}
+function tLeerlingen(){
+  return `<p class="muted">Gebruik liefst voornamen of initialen. Wijzigingen worden meteen bewaard.</p>
+  <div class="tablewrap"><table><tr><th>Kleur</th><th>Code</th><th>Naam</th><th>Streefniveau</th><th>Toegewezen teksten</th><th>Advies (uit laatste beurt)</th><th></th></tr>
+  ${state.students.map(s=>{ const S=summary(s); return `<tr>
+    <td><span class="mini" style="background:${s.color}">${esc(initials(s.naam))}</span></td>
+    <td><input data-st="code" data-id="${s.id}" value="${esc(s.code)}" style="width:70px;padding:6px;border:1.5px solid var(--line);border-radius:8px"></td>
+    <td><input data-st="naam" data-id="${s.id}" value="${esc(s.naam)}" style="width:160px;padding:6px;border:1.5px solid var(--line);border-radius:8px"></td>
+    <td><select data-st="streef" data-id="${s.id}" style="padding:6px;border:1.5px solid var(--line);border-radius:8px">${state.normen.levels.map(l=>`<option ${l.lv===s.streef?"selected":""}>${l.lv}</option>`).join("")}</select></td>
+    <td>${state.texts.map(t=>`<label class="row small" style="gap:6px;margin:2px 0"><input type="checkbox" data-assign="${t.id}" data-id="${s.id}" ${s.assigned.includes(t.id)?"checked":""}> ${esc(t.title)} <span class="muted">(${esc(t.level)})</span></label>`).join("")}</td>
+    <td class="small">${esc(S.advies||"–")}</td>
+    <td>${state.students.length>1?`<button class="btn small ghost" data-a="student-del" data-id="${s.id}">✕</button>`:""}</td></tr>`;}).join("")}
+  </table></div>
+  <div style="margin-top:12px"><button class="btn light" data-a="student-add">＋ Leerling toevoegen</button></div>`;
+}
+function tStruikel(){
+  const rows = state.students.map(s=>({s,S:summary(s)}));
+  const max = Math.max(1,...rows.flatMap(r=>r.S.counts?Object.values(r.S.counts):[0]));
+  const cell = n => { const a = n/max; return `<td class="num" style="background:rgba(224,123,57,${(a*0.85).toFixed(2)});color:${a>0.6?"#fff":"inherit"}">${n||""}</td>`; };
+  return `<p class="muted">Hoe vaak elk struikelpunt is aangeduid (struikelpunt 1 + 2) over alle leesbeurten. Hoe donkerder, hoe vaker.</p>
+  <div class="tablewrap heat"><table><tr><th>Leerling</th>${state.tips.map(t=>`<th style="min-width:90px">${esc(t.name)}</th>`).join("")}</tr>
+  ${rows.map(({s,S})=>`<tr><td><b>${esc(s.naam)}</b></td>${state.tips.map(t=>cell(S.counts?S.counts[t.id]:0)).join("")}</tr>`).join("")}</table></div>`;
+}
+function tNormen(){
+  const N=state.normen;
+  return `<div class="banner">De richttempo's zijn indicatieve startwaarden, <b>geen officiële AVI-normen</b>. Pas ze aan aan je ervaring of de afspraken van je school.</div>
+  <div class="card"><h3 style="margin-top:0">Beslisregels</h3>
+    <div class="formgrid">
+      <label class="f">Min. nauwkeurigheid voor 'Beheerst' (%)<input type="number" step="0.5" min="50" max="100" data-norm="beheerst" value="${(N.beheerst*100).toFixed(1).replace(/\.0$/,"")}"></label>
+      <label class="f">Onder deze nauwkeurigheid = 'Frustratie' (%)<input type="number" step="0.5" min="50" max="100" data-norm="frustratie" value="${(N.frustratie*100).toFixed(1).replace(/\.0$/,"")}"></label>
+      <label class="f">Tempo-ondergrens 'Frustratie' (% van richttempo)<input type="number" step="5" min="10" max="100" data-norm="tempoFactor" value="${Math.round(N.tempoFactor*100)}"></label>
+    </div>
+    <p class="small muted">Beheerst = nauwkeurigheid ≥ grens én tempo ≥ richttempo. Frustratie = nauwkeurigheid onder de ondergrens of tempo onder ${Math.round(N.tempoFactor*100)}% van het richttempo. Al de rest = Instructie.<br>
+    Fouten = verkeerd gelezen + overgeslagen + toegevoegde woorden. Zelfcorrecties en herhalingen tellen niet als fout.</p>
+  </div>
+  <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Richttempo per AVI-niveau (woorden correct per minuut)</h3>
+    <div class="formgrid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">${N.levels.map((l,i)=>`<label class="f">${l.lv} <span class="small">${esc(l.moment)}</span><input type="number" min="1" data-tempo="${i}" value="${l.tempo}"></label>`).join("")}</div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Struikelpunten en remediëringstips</h3>
+    ${state.tips.map((t,i)=>`<div style="margin-bottom:12px"><label class="f"><b style="color:var(--ink)">${esc(t.name)}</b>${t.ex?` <span>bv. ${esc(t.ex)}</span>`:""}<textarea rows="2" data-tip="${i}">${esc(t.tip)}</textarea></label></div>`).join("")}
+    <button class="btn ghost small" data-a="reset-norms">Standaardwaarden terugzetten</button>
+  </div>`;
+}
+function tGegevens(){
+  const n = state.beurten.length;
+  return `<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">☁ Koppeling met je Google Drive</h3>
+    ${Sync.on()? `<p class="small">Leesbeurten, opnames en oefentijd komen automatisch in het tabblad <b>App-beurten</b> en <b>App-oefentijd</b> van je spreadsheet.${Sync.isTeacherDevice()?" Klik op ⟳ Resultaten ophalen om ze hier in het overzicht te zien.":""}</p><span id="syncbadge">${syncBadgeHTML()}</span>`
+      : `<p class="small muted">Nog niet ingesteld. Met een koppeling hoef je geen bestanden meer over te zetten. <button class="btn small" data-a="tab" data-tab="instellingen">Instellen</button></p>`}
+  </div>
+  <h3>Zonder koppeling: met bestanden</h3>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+    <div class="card"><h3 style="margin-top:0">1. Lespakket naar de Chromebooks</h3>
+      <p class="small muted">Bewaar je leerlingen, teksten en instellingen in een bestand. Open dat bestand op elke Chromebook via <b>Importeer bestand</b>.</p>
+      <button class="btn" data-a="export-pack">⬇ Lespakket bewaren</button></div>
+    <div class="card"><h3 style="margin-top:0">2. Resultaten verzamelen</h3>
+      <p class="small muted">Op elke Chromebook: <b>Resultaten bewaren</b> (bv. in Google Drive). Op jouw toestel: <b>Importeer bestand</b>. Leesbeurten worden samengevoegd; dubbels worden overgeslagen. Geluidsopnames blijven op het toestel waar gelezen werd.</p>
+      <button class="btn" data-a="export-all">⬇ Resultaten bewaren (${n} beurten)</button></div>
+    <div class="card"><h3 style="margin-top:0">Importeer bestand</h3>
+      <p class="small muted">Lespakket of resultaten van een ander toestel.</p>
+      <label class="row small" style="gap:6px;margin-bottom:10px;flex-wrap:nowrap"><input type="checkbox" id="imp-cfg" checked> Ook leerlingen, teksten en instellingen overnemen</label>
+      <input type="file" id="imp-file" accept=".json,application/json"></div>
+    <div class="card"><h3 style="margin-top:0">Naar de Leesvolger (spreadsheet)</h3>
+      <p class="small muted">Zelfde kolommen als het tabblad Leesvolger (A tot M). Kopieer en plak in cel A5 (of de eerste lege rij) in Google Spreadsheets of Excel.</p>
+      <div class="row"><button class="btn" data-a="copy-tsv">📋 Kopieer voor spreadsheet</button><button class="btn light" data-a="export-csv">⬇ CSV-bestand</button></div></div>
+    <div class="card"><h3 style="margin-top:0">Opruimen</h3>
+      <p class="small muted">Wis alle leesbeurten en opnames op dit toestel (bv. na het overzetten). Teksten en leerlingen blijven.</p>
+      <button class="btn red" data-a="wipe-beurten">Wis leesbeurten</button></div>
+  </div>`;
+}
+function koppelingCard(){
+  const st = state.settings;
+  if(st.classKey && !st.teacherKey){
+    return `<div class="card" style="grid-column:1/-1"><h3 style="margin-top:0">☁ Koppeling met de spreadsheet van de leerkracht</h3>
+      <p>Dit toestel is gekoppeld als <b>leerling-toestel</b>. Leesbeurten, opnames en oefentijd gaan automatisch naar de spreadsheet van de leerkracht. Teksten en leerlingen worden bij het opstarten opgehaald.</p>
+      <div class="row"><span id="syncbadge">${syncBadgeHTML()}</span><button class="btn light small" data-a="test-sync">Test verbinding</button><span id="sync-test" class="small"></span><div class="spacer"></div><button class="btn ghost small" data-a="unlink">Koppeling verbreken</button></div></div>`;
+  }
+  if(!st.teacherKey){
+    return `<div class="card" style="grid-column:1/-1"><h3 style="margin-top:0">☁ Koppeling met je Google Drive</h3>
+      <p>Met een koppeling komen de leesbeurten, opnames en oefentijd van alle Chromebooks <b>automatisch</b> in een Google Spreadsheet in jouw Drive. De Chromebooks halen je teksten en leerlingen ook automatisch op. Instellen duurt ongeveer 5 minuten en doe je één keer.</p>
+      <button class="btn" data-a="make-keys">Nieuwe koppeling instellen</button>
+      <details style="margin-top:14px"><summary><b>Ik heb al een koppeling</b> (bv. op een ander toestel of in een andere versie van de app)</summary>
+        <p class="small muted">Je vindt deze gegevens in het andere toestel onder Leerkracht → Instellingen.</p>
+        <div class="formgrid" style="grid-template-columns:2fr 1fr 1fr">
+          <label class="f">Web-app-URL<input id="ex-url" placeholder="https://script.google.com/macros/s/…/exec"></label>
+          <label class="f">Sleutel leerkracht<input id="ex-tk"></label>
+          <label class="f">Sleutel klas<input id="ex-ck"></label></div>
+        <button class="btn" style="margin-top:10px" data-a="link-existing">Koppel dit toestel</button></details></div>`;
+  }
+  return `<div class="card" style="grid-column:1/-1"><h3 style="margin-top:0">☁ Koppeling met je Google Drive</h3>
+    <ol style="line-height:1.7;padding-left:20px;margin:0 0 10px">
+      <li>Maak in je Google Drive een <b>nieuwe Google Spreadsheet</b>, bv. "Leesvolger app".</li>
+      <li>Kies in die spreadsheet <b>Extensies → Apps Script</b>. Wis wat er staat en plak dit script: <button class="btn small" data-a="copy-gas">📋 Kopieer script</button>
+        <details style="margin-top:6px"><summary class="small muted">Script tonen</summary><textarea id="gas-ta" rows="10" readonly style="width:100%;font-family:monospace;font-size:12px">${esc(gasScript())}</textarea></details></li>
+      <li>Klik op 💾 Opslaan, dan <b>Implementeren → Nieuwe implementatie</b>. Kies bij het tandwiel <b>Web-app</b>. Zet <b>Uitvoeren als: Ikzelf</b> en <b>Wie heeft toegang: Iedereen</b>. Klik op Implementeren en geef toestemming met je schoolaccount.</li>
+      <li>Kopieer de <b>web-app-URL</b> en plak die hier:
+        <div class="row" style="margin-top:6px"><input data-set="syncUrl" value="${esc(st.syncUrl)}" placeholder="https://script.google.com/macros/s/…/exec" style="flex:1;min-width:280px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px">
+        <button class="btn light" data-a="test-sync">Test verbinding</button></div><div id="sync-test" class="small" style="margin-top:6px"></div></li>
+      ${location.protocol==="https:" ? `<li><b>Stuur je leerlingen deze link</b> (bv. via Google Classroom). Ze openen hem één keer op hun Chromebook en maken een bladwijzer (Ctrl + D). Chrome onthoudt dan de toestemming voor de microfoon.
+        <div class="row" style="margin-top:6px"><input readonly id="stud-link" value="${esc(studentLink())}" style="flex:1;min-width:280px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;font-size:13px"><button class="btn small" data-a="copy-link">📋 Kopieer link</button></div></li>` : `<li>Klik op <button class="btn small orange" data-a="bake">⬇ App voor de Chromebooks</button>. Zet het bestand <b>Leesapp-klas.html</b> in je Drive en deel het met je 4 leerlingen. Op elke Chromebook één keer: in de app <b>Bestanden → Google Drive → Gedeeld met mij</b> het bestand <b>kopiëren naar Downloads</b> (rechtermuisknop → Kopiëren, dan in Downloads: Ctrl + V). Daarna in Chrome <b>Ctrl + O</b> → Downloads → Leesapp-klas.html, en een bladwijzer maken (Ctrl + D). Rechtstreeks openen vanuit Drive toont alleen de code.<br><span class="small muted">Let op: bij een lokaal bestand vraagt Chrome bij elke start opnieuw toestemming voor de microfoon. Zet de app op een vaste website (https) om dat te vermijden.</span></li>`}
+    </ol>
+    <p class="small muted">Sleutel klas: ${st.classKey?`<code>${esc(st.classKey)}</code>`:`<input data-set="classKey" placeholder="vul de sleutel klas in" style="padding:4px 8px;border:1.5px solid var(--red);border-radius:8px">`} · sleutel leerkracht: <code>${esc(st.teacherKey)}</code> (staat alleen op dit toestel en in je script). Wijzigingen aan teksten en leerlingen worden automatisch naar de Chromebooks gestuurd. <button class="btn ghost small" data-a="publish">Nu publiceren</button> <button class="btn ghost small" data-a="unlink">Koppeling verbreken</button></p>
+  </div>`;
+}
+function tInstellingen(){
+  const st = state.settings; const vs = (voicesCache.length?voicesCache:loadVoices()).filter(v=>/^nl/i.test(v.lang));
+  return `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+    ${koppelingCard()}
+    <div class="card"><h3 style="margin-top:0">Oefentijd & toegang</h3>
+      <div class="formgrid"><label class="f">Oefentijd per dag (min)<input type="number" min="5" max="120" data-set="sessionMin" value="${st.sessionMin}"></label>
+      <label class="f">PIN leerkracht<input data-set="pin" value="${esc(st.pin)}" maxlength="8"></label>
+      <label class="f">Standaard lettergrootte (px)<input type="number" min="18" max="48" data-set="fontSize" value="${st.fontSize}"></label></div>
+      <p class="small muted">De PIN houdt leerlingen uit het leerkrachtgedeelte, maar is geen echte beveiliging.</p></div>
+    <div class="card"><h3 style="margin-top:0">Voorlezen</h3>
+      <label class="f">Stem<select data-set="voiceURI"><option value="">Automatisch (Vlaams indien beschikbaar)</option>${vs.map(v=>`<option value="${esc(v.voiceURI)}" ${v.voiceURI===st.voiceURI?"selected":""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select></label>
+      ${vs.length?"":`<p class="small" style="color:var(--red)">Geen Nederlandse stem gevonden op dit toestel. Op een Chromebook: Instellingen → Toegankelijkheid → Tekst-naar-spraak → Spraakengine → voeg Nederlands toe.</p>`}
+      <label class="f" style="margin-top:10px">Snelheid: <span id="ratev">${st.rate}</span><input type="range" min="0.5" max="1.2" step="0.05" data-set="rate" value="${st.rate}"></label>
+      <button class="btn light small" style="margin-top:10px" data-a="test-voice">🔊 Test stem</button></div>
+    <div class="card"><h3 style="margin-top:0">Nakijken & opnemen</h3>
+      <label class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" data-set="autoCheck" ${st.autoCheck?"checked":""}> Automatisch nakijken met spraakherkenning van Chrome</label>
+      <label class="f" style="margin:8px 0 12px 26px">Taal spraakherkenning<select data-set="lang"><option ${st.lang==="nl-BE"?"selected":""} value="nl-BE">Nederlands (België)</option><option ${st.lang==="nl-NL"?"selected":""} value="nl-NL">Nederlands (Nederland)</option></select></label>
+      <label class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" data-set="record" ${st.record?"checked":""}> Leesbeurt opnemen om te herbeluisteren (gaat naar je Drive als de koppeling aan staat)</label>
+      <p class="small muted" style="margin-top:12px">Let op: de spraakherkenning van Chrome stuurt het geluid naar Google om het om te zetten in tekst. Ze raadt wat er bedoeld werd en verbetert dus soms fouten weg. Kijk elke beurt daarom zelf na (tab Leesbeurten). Spreek het gebruik af met je school.${SR?"":` <b style="color:var(--red)">Deze browser ondersteunt geen spraakherkenning – gebruik Chrome.</b>`}</p></div>
+  </div>`;
+}
+
+/* ---------- Nakijken / handmatige beurt ---------- */
+let reviewDraft = null;
+function openReview(id){
+  const b = state.beurten.find(x=>x.id===id); if(!b) return;
+  reviewDraft = JSON.parse(JSON.stringify(b));
+  if(!reviewDraft.marks && reviewDraft.method!=="handmatig") reviewDraft.marks = new Array(+b.words||0).fill("juist");
+  renderReview();
+  (async()=>{
+    let blob = b.hasAudio? await AudioDB.get(b.id) : null;
+    if(!blob && b.audioRemote && Sync.isTeacherDevice()){ const n=$("#rv-noaudio"); if(n){ n.textContent="Opname ophalen uit je Drive…"; n.classList.remove("hidden"); } blob = await Sync.fetchAudio(b.id); }
+    const a=$("#rv-audio"), n=$("#rv-noaudio");
+    if(blob && a){ a.src=URL.createObjectURL(blob); a.parentElement.classList.remove("hidden"); if(n) n.classList.add("hidden"); }
+    else if(n){ n.textContent = b.method==="handmatig"? "" : "Geen opname beschikbaar op dit toestel."; n.classList.remove("hidden"); }
+  })();
+}
+function newManual(){
+  const s = state.students[0]; const t = state.texts[0];
+  reviewDraft = {id:uid(), studentId:s?s.id:"", textId:t?t.id:"", title:t?t.title:"", level:t?t.level:"M5", words:t?wordsOf(t.body).length:0,
+    seconds:0, ts:Date.now(), method:"handmatig", checked:true, errors:0, selfCorr:0, st1:"", st2:"", probleem:"", opmerking:"", marks:null, isNew:true};
+  renderReview();
+}
+function renderReview(){
+  const b = reviewDraft; const manual = b.method==="handmatig";
+  const s = student(b.studentId);
+  const body = b.bodySnapshot || textById(b.textId)?.body || "";
+  const toks = tokenize(body);
+  const m = metrics(b); const c = beurtCounts(b);
+  const tipOpts = sel => `<option value="">–</option>`+state.tips.map(t=>`<option value="${t.id}" ${t.id===sel?"selected":""}>${esc(t.name)}</option>`).join("");
+  openModal(`<h2>${manual&&b.isNew?"Leesbeurt handmatig toevoegen":"Leesbeurt nakijken"}</h2>
+    ${manual? `<div class="formgrid" style="margin-bottom:14px">
+        <label class="f">Leerling<select id="rv-student">${state.students.map(x=>`<option value="${x.id}" ${x.id===b.studentId?"selected":""}>${esc(x.naam)}</option>`).join("")}</select></label>
+        <label class="f">Tekst<select id="rv-text">${state.texts.map(t=>`<option value="${t.id}" ${t.id===b.textId?"selected":""}>${esc(t.title)} (${t.level})</option>`).join("")}<option value="" ${!b.textId?"selected":""}>Andere tekst…</option></select></label>
+        <label class="f">Titel<input id="rv-title" value="${esc(b.title)}"></label>
+        <label class="f">AVI-niveau<select id="rv-level">${state.normen.levels.map(l=>`<option ${l.lv===b.level?"selected":""}>${l.lv}</option>`).join("")}</select></label>
+        <label class="f">Aantal woorden<input type="number" id="rv-words" value="${b.words}"></label>
+        <label class="f">Datum<input type="date" id="rv-date" value="${dayKey(b.ts)}"></label>
+      </div>`
+    : `<p class="muted" style="margin-top:-6px">${esc(s?s.naam:"?")} · ${esc(b.title)} (AVI ${esc(b.level)}) · ${b.words} woorden · ${fmtDateTime(b.ts)}</p>
+      <div class="hidden"><audio id="rv-audio" controls style="width:100%"></audio></div>
+      <p class="small muted hidden" id="rv-noaudio">Geen opname op dit toestel (de opname blijft op de Chromebook waarop gelezen werd).</p>
+      ${b.autoFailed?`<div class="banner">Automatisch nakijken lukte niet${b.asrError?` (${esc(b.asrError)})`:""}. Beluister de opname en tik zelf de fouten aan.</div>`:`<div class="banner">Dit is een <b>voorstel</b> van de spraakherkenning. Beluister de opname en tik op een woord om het te verbeteren.</div>`}
+      <div class="legend" style="margin:10px 0"><span>Tik op een woord:</span><span style="background:#fff;border:1px solid var(--line)">juist</span><span class="m-fout">fout</span><span class="m-overgeslagen">overgeslagen</span><span class="m-zelfcorrectie">zelfcorrectie</span></div>
+      <div class="reviewtext" id="rv-text-words">${toks.map(tk=>tk.t==="w"?`<span class="w ${b.marks&&b.marks[tk.i]&&b.marks[tk.i]!=="juist"?"m-"+b.marks[tk.i]:""}" data-rw="${tk.i}">${esc(tk.s)}</span>`:esc(tk.s)).join("")}</div>
+      ${b.transcript?`<details style="margin-top:8px"><summary class="small muted">Wat de spraakherkenning hoorde</summary><p class="small">${esc(b.transcript)}</p></details>`:""}`}
+    <div class="formgrid" style="margin-top:16px">
+      <label class="f">Leestijd minuten<input type="number" min="0" id="rv-min" value="${Math.floor((b.seconds||0)/60)}"></label>
+      <label class="f">Leestijd seconden<input type="number" min="0" max="59" id="rv-sec" value="${(b.seconds||0)%60}"></label>
+      ${manual? `<label class="f">Aantal fouten<input type="number" min="0" id="rv-errors" value="${b.errors||0}"></label>
+                 <label class="f">Zelfcorrecties<input type="number" min="0" id="rv-sc" value="${b.selfCorr||0}"></label>`
+              : `<label class="f">Toegevoegde woorden (fout)<input type="number" min="0" id="rv-ins" value="${b.insertions||0}"></label>`}
+      <label class="f">Struikelpunt 1<select id="rv-st1">${tipOpts(b.st1)}</select></label>
+      <label class="f">Struikelpunt 2<select id="rv-st2">${tipOpts(b.st2)}</select></label>
+    </div>
+    <div class="formgrid" style="grid-template-columns:1fr 1fr;margin-top:12px">
+      <label class="f">Probleemwoorden ${manual?"":`<button class="btn small ghost" data-a="rv-fillwords" style="align-self:flex-start;margin-top:2px">neem aangetikte woorden over</button>`}<input id="rv-prob" value="${esc(b.probleem||"")}"></label>
+      <label class="f">Opmerking<input id="rv-note" value="${esc(b.opmerking||"")}"></label>
+    </div>
+    <div class="kpis" style="margin-top:16px" id="rv-kpis">${reviewKpis(b)}</div>
+    <div class="row" style="margin-top:8px">${!b.isNew?`<button class="btn red" data-a="rv-delete">Verwijder beurt</button>`:""}<div class="spacer"></div>
+      <button class="btn ghost" data-a="modal-close">Annuleer</button>
+      <button class="btn green" data-a="rv-save">${manual?"Bewaar":"✔ Bewaar als nagekeken"}</button></div>`);
+}
+function reviewKpis(b){
+  const m = metrics(b), c = beurtCounts(b);
+  return `<div class="kpi">Fouten<b>${m.errors}</b><span class="small muted">${b.marks?`${c.fout} fout · ${c.over} overgesl. · ${c.ins} toegev.`:""}</span></div>
+    <div class="kpi">Zelfcorrecties<b>${m.selfCorr}</b></div>
+    <div class="kpi">Woorden correct/min<b>${m.wcpm??"–"}</b></div>
+    <div class="kpi">Nauwkeurigheid<b>${pct(m.acc)}</b></div>
+    <div class="kpi">Resultaat<b><span class="pill ${m.result}" style="font-size:16px">${m.result||"–"}</span></b></div>`;
+}
+function readReviewForm(){
+  const b = reviewDraft; const v = id => { const el=$("#"+id); return el? el.value : null; };
+  b.seconds = (parseInt(v("rv-min"))||0)*60 + (parseInt(v("rv-sec"))||0);
+  if(b.method==="handmatig"){
+    b.studentId = v("rv-student"); b.title = v("rv-title"); b.level = v("rv-level"); b.words = parseInt(v("rv-words"))||0;
+    b.errors = parseInt(v("rv-errors"))||0; b.selfCorr = parseInt(v("rv-sc"))||0;
+    const d = v("rv-date"); if(d){ const [y,mo,da]=d.split("-").map(Number); const old=new Date(b.ts); b.ts = new Date(y,mo-1,da,old.getHours(),old.getMinutes()).getTime(); }
+  } else {
+    b.insertions = parseInt(v("rv-ins"))||0;
+  }
+  b.st1 = v("rv-st1")||""; b.st2 = v("rv-st2")||""; b.probleem = v("rv-prob")||""; b.opmerking = v("rv-note")||"";
+}
+function updateReviewKpis(){ readReviewForm(); const k=$("#rv-kpis"); if(k) k.innerHTML = reviewKpis(reviewDraft); }
+
+/* ---------- Export / import ---------- */
+function download(name, text, type){
+  const blob = new Blob([text],{type}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function cfgPart(){ return {settings:state.settings, normen:state.normen, tips:state.tips, students:state.students, texts:state.texts}; }
+function exportPack(){ download(`leesapp-lespakket-${dayKey()}.json`, JSON.stringify({kind:"leesapp",type:"pakket",exported:Date.now(),...cfgPart()},null,1), "application/json"); toast("Lespakket bewaard in Downloads."); }
+function exportAll(){ download(`leesapp-resultaten-${dayKey()}-${Date.now().toString(36).slice(-4)}.json`, JSON.stringify({kind:"leesapp",type:"resultaten",exported:Date.now(),...cfgPart(),practice:state.practice,beurten:state.beurten},null,1), "application/json"); toast("Resultaten bewaard in Downloads."); }
+function importFile(file, withCfg){
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    try{
+      const d = JSON.parse(fr.result);
+      if(d.kind!=="leesapp") throw new Error("Geen leesapp-bestand");
+      if(withCfg){ ["settings","normen","tips","students","texts"].forEach(k=>{ if(d[k]) state[k]=d[k]; }); }
+      let added=0;
+      (d.beurten||[]).forEach(b=>{ const i=state.beurten.findIndex(x=>x.id===b.id);
+        if(i<0){ state.beurten.push(Object.assign({},b,{hasAudio:false,audioElsewhere:b.hasAudio})); added++; }
+        else if(b.checked && !state.beurten[i].checked){ state.beurten[i]=Object.assign({},b,{hasAudio:state.beurten[i].hasAudio}); } });
+      Object.entries(d.practice||{}).forEach(([sid,days])=>{ state.practice[sid]=state.practice[sid]||{}; Object.entries(days).forEach(([k,v])=>{ state.practice[sid][k]=Math.max(state.practice[sid][k]||0,v); }); });
+      save(); render(); toast(`Ingeladen: ${added} nieuwe leesbeurt${added===1?"":"en"}${withCfg?" + leerlingen, teksten en instellingen":""}.`);
+    }catch(e){ toast("Dit bestand kon niet ingeladen worden."); console.warn(e); }
+  };
+  fr.readAsText(file);
+}
+function sheetRows(){
+  return state.beurten.slice().sort((a,b)=>a.ts-b.ts).map(b=>{ const s=student(b.studentId)||{}; const c=beurtCounts(b);
+    return [fmtDate(b.ts), s.code||"", b.title, b.level, b.words, Math.floor(b.seconds/60), b.seconds%60, c.errors, c.selfCorr, tipName(b.st1), tipName(b.st2), b.probleem||"", b.opmerking||""]; });
+}
+async function copyTSV(){
+  const txt = sheetRows().map(r=>r.map(x=>String(x).replace(/[\t\n]/g," ")).join("\t")).join("\n");
+  try{ await navigator.clipboard.writeText(txt); toast(`${state.beurten.length} rijen gekopieerd – plak in de Leesvolger.`); }
+  catch(e){ openModal(`<h2>Kopieer deze rijen</h2><p class="muted small">Selecteer alles (Ctrl+A) en kopieer (Ctrl+C).</p><textarea rows="12" style="width:100%">${esc(txt)}</textarea><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" data-a="modal-close">Sluit</button></div>`); }
+}
+function exportCSV(){
+  const head = ["Datum","Leerling (code)","Tekst (titel)","AVI-niveau tekst","Aantal woorden","Leestijd minuten","Leestijd seconden","Aantal fouten","Zelfcorrecties","Struikelpunt 1","Struikelpunt 2","Probleemwoorden","Opmerking"];
+  const q = x => `"${String(x).replace(/"/g,'""')}"`;
+  download(`leesvolger-${dayKey()}.csv`, "﻿"+[head].concat(sheetRows()).map(r=>r.map(q).join(";")).join("\r\n"), "text/csv");
+}
+
+/* ---------- Oefentijd-timer ---------- */
+function startSession(sid){
+  stopSession();
+  let lastSave = Date.now(); let lastPush = Date.now();
+  session = {sid, tick:setInterval(()=>{
+    if(document.hidden) return;
+    state.practice[sid] = state.practice[sid]||{}; const k=dayKey();
+    state.practice[sid][k] = (state.practice[sid][k]||0)+1;
+    if(Date.now()-lastSave>10000){ save(); lastSave=Date.now(); }
+    const total=(state.settings.sessionMin||25)*60, used=state.practice[sid][k], left=Math.max(0,total-used);
+    const tl=$("#timerleft"), tf=$("#timerfill");
+    if(tl) tl.textContent = left>0? "Nog "+Math.ceil(left/60)+" min" : Math.round(total/60)+" min geoefend ✓";
+    if(tf) tf.style.width = Math.min(100,used/total*100)+"%";
+    if(Date.now()-lastPush>60000){ lastPush=Date.now(); Sync.queuePractice(sid,k,used); }
+  },1000)};
+}
+function stopSession(){ releaseMic(); if(session){ clearInterval(session.tick); session=null; save(); } }
+/* ---------- Event handling ---------- */
+function afterRender(){
+  if(view.name==="teacher" && view.tab==="gegevens"){
+    const f=$("#imp-file"); if(f) f.onchange = ()=>{ if(f.files[0]) importFile(f.files[0], $("#imp-cfg").checked); f.value=""; };
+  }
+}
+document.addEventListener("click", async e=>{
+  const el = e.target.closest("[data-a]"); if(!el || el.disabled) return;
+  const a = el.dataset.a, id = el.dataset.id;
+  switch(a){
+    case "home": stopSession(); reading=null; micOKFor=null; go({name:"home"}); break;
+    case "pick-student": startSession(id); if(needsMic() && micOKFor!==id) go({name:"miccheck", sid:id}); else go({name:"student", sid:id}); break;
+    case "session-stop": {
+      const s0 = student(view.sid); const used = practiceToday(view.sid);
+      openModal(`<div style="text-align:center"><div class="star" style="font-size:56px">👋</div><h2>Wil je stoppen met oefenen?</h2>
+        <p style="font-size:18px" class="muted">Je hebt vandaag ${(m=>m===1?"1 minuut":m+" minuten")(Math.max(1,Math.round(used/60)))} geoefend.</p>
+        <div class="row" style="justify-content:center;margin-top:18px"><button class="btn big light" data-a="modal-close">Nee, ik oefen verder</button>
+        <button class="btn big red" data-a="session-stop-ok">Ja, stoppen</button></div></div>`);
+      break; }
+    case "session-stop-ok": {
+      const sid = view.sid; closeModal(); stopSpeak(); ttsRun++;
+      if(reading){ try{ reading.listen && reading.listen.stop && reading.listen.stop(); reading.rec && reading.rec.cancel(); }catch(e){} reading=null; }
+      const k = dayKey(); Sync.queuePractice(sid, k, practiceToday(sid));
+      stopSession(); micOKFor=null; go({name:"home"});
+      const s1 = student(sid); toast("Goed gewerkt"+(s1?", "+s1.naam:"")+"! Tot de volgende keer. 👋");
+      break; }
+    case "mic-start": micStart(); break;
+    case "mic-hear": stopSpeak(); speak("Hallo! Hoor je mij goed? Dan staat je geluid juist."); break;
+    case "mic-continue": micOKFor=view.sid; micStop(); go({name:"student", sid:view.sid}); break;
+    case "mic-skip": micStop(); go({name:"student", sid:view.sid}); break;
+    case "back-student": go({name:"student", sid:view.sid}); break;
+    case "open-text": go({name:"reader", sid:view.sid, tid:id, phase:"idle", fontSize:view.fontSize}); break;
+    case "font+": view.fontSize=Math.min(56,(view.fontSize||state.settings.fontSize)+3); $("#reader").style.fontSize=view.fontSize+"px"; break;
+    case "font-": view.fontSize=Math.max(16,(view.fontSize||state.settings.fontSize)-3); $("#reader").style.fontSize=view.fontSize+"px"; break;
+    case "tts-all": ttsAll(); break;
+    case "tts-echo": view.echoIdx=null; echoStep(false); break;
+    case "echo-next": echoStep(false); break;
+    case "echo-again": echoStep(true); break;
+    case "tts-stop": ttsRun++; stopSpeak(); view.phase="idle"; view.echoIdx=null; render(); break;
+    case "read-start": readStart(); break;
+    case "read-done": readDone(); break;
+    case "read-cancel": readCancel(); break;
+    case "say-word": stopSpeak(); speak(el.dataset.w); break;
+    case "say-word-slow": stopSpeak(); speak(el.dataset.w,{rate:0.5}); break;
+    case "practice": go({name:"practice", sid:view.sid, pi:0, words:practiceWordsFor(view.sid)}); break;
+    case "practice-next": view.pi=(view.pi||0)+1; render(); break;
+    case "practice-restart": view.pi=0; render(); break;
+    case "practice-say": practiceSay(); break;
+    case "teacher-login":
+      openModal(`<h2>Leerkracht</h2><p class="muted">Geef je PIN in.</p><div class="pin"><input type="password" id="pin-in" inputmode="numeric" autocomplete="off"></div><p class="small muted" style="text-align:center">Standaard-PIN: 1234 (wijzig bij Instellingen)</p><div class="row" style="justify-content:flex-end"><button class="btn ghost" data-a="modal-close">Annuleer</button><button class="btn" data-a="pin-ok">Open</button></div>`);
+      setTimeout(()=>{ const p=$("#pin-in"); if(p){ p.focus(); p.onkeydown=ev=>{ if(ev.key==="Enter") $("[data-a=pin-ok]").click(); }; } },50); break;
+    case "pin-ok": if($("#pin-in").value===String(state.settings.pin)){ closeModal(); stopSession(); go({name:"teacher", tab:"overzicht"}); Sync.pullResults(false); Sync.flush(); } else { $("#pin-in").value=""; toast("Verkeerde PIN"); } break;
+    case "modal-close": closeModal(); break;
+    case "tab": view.tab=el.dataset.tab; closeModal(); render(); break;
+    case "review": openReview(id); break;
+    case "manual-new": newManual(); break;
+    case "rv-fillwords": { $("#rv-prob").value = probleemFromMarks(reviewDraft).join(", "); break; }
+    case "rv-save": {
+      readReviewForm(); const b=reviewDraft; b.checked = true; delete b.isNew;
+      if(b.method==="handmatig" && !b.words){ toast("Vul het aantal woorden in."); return; }
+      b.updated = Date.now();
+      const i = state.beurten.findIndex(x=>x.id===b.id); if(i>=0) state.beurten[i]=b; else state.beurten.push(b);
+      save(); Sync.enqueue("beurt", b.id); closeModal(); render(); toast("Bewaard."); break; }
+    case "rv-delete": confirmBox("Leesbeurt verwijderen?","Deze leesbeurt en de opname worden gewist.","Verwijder",()=>{ const did=reviewDraft.id; state.beurten=state.beurten.filter(x=>x.id!==did); state.outbox=state.outbox.filter(x=>x.id!==did); AudioDB.del(did); save(); Sync.enqueue("delete", did); render(); }); break;
+    case "text-new": openModal(textForm({})); bindTextForm(); break;
+    case "text-edit": openModal(textForm(textById(id))); bindTextForm(); break;
+    case "text-save": {
+      const title=$("#tf-title").value.trim(), body=$("#tf-body").value.trim();
+      if(!title||!body){ toast("Vul een titel en een tekst in."); return; }
+      let t = id? textById(id) : null; if(!t){ t={id:"t-"+uid()}; state.texts.push(t); }
+      t.title=title; t.body=body; t.level=$("#tf-level").value; t.source=$("#tf-source").value.trim();
+      const chosen=[...document.querySelectorAll(".tf-as")].filter(x=>x.checked).map(x=>x.value);
+      state.students.forEach(s=>{ s.assigned=s.assigned.filter(x=>x!==t.id); if(chosen.includes(s.id)) s.assigned.push(t.id); });
+      save(); closeModal(); render(); toast("Tekst bewaard."); break; }
+    case "text-del": confirmBox("Tekst verwijderen?","De tekst verdwijnt uit de lijst. Leesbeurten op deze tekst blijven bewaard.","Verwijder",()=>{ state.texts=state.texts.filter(t=>t.id!==id); state.students.forEach(s=>s.assigned=s.assigned.filter(x=>x!==id)); save(); render(); }); break;
+    case "student-add": { const n=state.students.length+1; state.students.push({id:"s"+uid(),code:"L"+n,naam:"Leerling "+n,streef:"M5",assigned:[],color:COLORS[(n-1)%COLORS.length]}); save(); render(); break; }
+    case "student-del": confirmBox("Leerling verwijderen?","De leerling verdwijnt. Leesbeurten van deze leerling worden ook gewist.","Verwijder",()=>{ state.students=state.students.filter(s=>s.id!==id); state.beurten=state.beurten.filter(b=>b.studentId!==id); save(); render(); }); break;
+    case "reset-norms": confirmBox("Standaardwaarden terugzetten?","Beslisregels, richttempo's en tips krijgen weer de beginwaarden.","Terugzetten",()=>{ const d=defaultState(); state.normen=d.normen; state.tips=d.tips; save(); render(); },false); break;
+    case "export-pack": exportPack(); break;
+    case "export-all": exportAll(); break;
+    case "copy-tsv": copyTSV(); break;
+    case "export-csv": exportCSV(); break;
+    case "wipe-beurten": confirmBox("Alle leesbeurten wissen?","Alle leesbeurten en opnames op dit toestel worden gewist. Bewaar eerst je resultaten als je ze nog nodig hebt.","Wis alles",()=>{ state.beurten=[]; state.practice={}; AudioDB.clear(); save(); render(); toast("Leesbeurten gewist."); }); break;
+    case "pull": Sync.pullResults(true); Sync.flush(); break;
+    case "publish": Sync.publish(false); break;
+    case "make-keys": state.settings.classKey=randKey(); state.settings.teacherKey=randKey(); saveRaw(); render(); break;
+    case "copy-gas": try{ await navigator.clipboard.writeText(gasScript()); toast("Script gekopieerd."); }catch(e){ const ta=$("#gas-ta"); if(ta){ ta.closest("details").open=true; ta.select(); } toast("Selecteer het script en kopieer met Ctrl+C."); } break;
+    case "test-sync": {
+      const out=$("#sync-test"); if(out) out.textContent="Bezig…";
+      try{ const j=await Sync.get({action:"ping"}); if(j.classKey && !state.settings.classKey){ state.settings.classKey=j.classKey; saveRaw(); } if(out){ out.textContent = j.role==="teacher"? "✅ Verbonden als leerkracht." : "✅ Verbonden (leerling-toestel)."; out.style.color="var(--green)"; } Sync.error=""; if(j.role==="teacher") Sync.publish(true); }
+      catch(e){ if(out){ out.textContent="❌ Geen verbinding: "+(e.message||"controleer de URL en of de web-app op 'Iedereen' staat."); out.style.color="var(--red)"; } }
+      updateSyncBadge(); break; }
+    case "bake":
+      if(!state.settings.syncUrl || !state.settings.classKey){ toast("Vul eerst de koppeling in."); return; }
+      download("Leesapp-klas.html", bakedHTML(), "text/html"); toast("Leesapp-klas.html bewaard in Downloads."); break;
+    case "copy-link": try{ await navigator.clipboard.writeText(studentLink()); toast("Link gekopieerd."); }catch(e){ const i=$("#stud-link"); if(i){ i.select(); } toast("Selecteer de link en kopieer met Ctrl+C."); } break;
+    case "link-existing": {
+      const u=$("#ex-url").value.trim(), tk=$("#ex-tk").value.trim(), ck=$("#ex-ck").value.trim();
+      if(!u || !tk){ toast("Vul minstens de URL en de sleutel van de leerkracht in."); return; }
+      Object.assign(state.settings,{syncUrl:u, teacherKey:tk, classKey:ck}); state.pakketUpdated=0; saveRaw();
+      try{ const j=await Sync.get({action:"ping"}); if(j.role!=="teacher") throw new Error("verkeerde sleutel"); if(j.classKey) state.settings.classKey=j.classKey; saveRaw();
+        await Sync.pullPakket(); await Sync.pullResults(false); render(); toast("Dit toestel is gekoppeld. Teksten en resultaten zijn opgehaald."); }
+      catch(e){ toast("Koppelen lukte niet: "+(e.message||"controleer de gegevens")); state.settings.teacherKey=""; state.settings.syncUrl=""; saveRaw(); render(); }
+      break; }
+    case "unlink": confirmBox("Koppeling verbreken op dit toestel?","Dit toestel stuurt dan niets meer naar je spreadsheet. Je gegevens blijven bewaard.","Verbreek",()=>{ state.settings.syncUrl=""; state.settings.teacherKey=""; state.settings.classKey=""; saveRaw(); render(); }); break;
+    case "test-voice": stopSpeak(); speak("Hallo! Zo klinkt de voorleesstem. Lotte rent naar buiten."); break;
+  }
+});
+function bindTextForm(){ const ta=$("#tf-body"); if(ta) ta.oninput=()=>{ $("#tf-count").textContent = wordsOf(ta.value).length+" woorden"; }; }
+
+// Klik op woord in nakijkscherm: juist → fout → overgeslagen → zelfcorrectie → juist
+document.addEventListener("click", e=>{
+  const w = e.target.closest("[data-rw]"); if(!w || !reviewDraft || !reviewDraft.marks) return;
+  const i = +w.dataset.rw; const order=["juist","fout","overgeslagen","zelfcorrectie"];
+  const cur = reviewDraft.marks[i]||"juist"; const nxt = order[(order.indexOf(cur)+1)%order.length];
+  reviewDraft.marks[i] = nxt; w.className = "w"+(nxt!=="juist"?" m-"+nxt:"");
+  updateReviewKpis();
+});
+document.addEventListener("input", e=>{
+  const t = e.target;
+  if(t.closest && t.closest(".modal") && /^rv-/.test(t.id||"")){ updateReviewKpis(); return; }
+  if(t.dataset.st){ const s=student(t.dataset.id); if(s){ s[t.dataset.st]=t.value; save(); } return; }
+  if(t.dataset.norm){ const v=parseFloat(String(t.value).replace(",", ".")); if(!isNaN(v)){ state.normen[t.dataset.norm]=v/100; save(); } return; }
+  if(t.dataset.tempo){ const v=parseInt(t.value); if(!isNaN(v)){ state.normen.levels[+t.dataset.tempo].tempo=v; save(); } return; }
+  if(t.dataset.tip){ state.tips[+t.dataset.tip].tip=t.value; save(); return; }
+  if(t.dataset.set){
+    const k=t.dataset.set; let v = t.type==="checkbox"? t.checked : t.value;
+    if(["sessionMin","fontSize"].includes(k)) v = parseInt(v)||state.settings[k];
+    if(k==="rate"){ v=parseFloat(v); const rv=$("#ratev"); if(rv) rv.textContent=v; }
+    state.settings[k]=v; save(); return;
+  }
+});
+document.addEventListener("change", e=>{
+  const t = e.target;
+  if(t.dataset.assign){ const s=student(t.dataset.id); if(s){ s.assigned = s.assigned.filter(x=>x!==t.dataset.assign); if(t.checked) s.assigned.push(t.dataset.assign); save(); } return; }
+  if(t.dataset.a==="filter"){ view.filter=t.value; render(); return; }
+  if(t.dataset.st==="streef"){ render(); return; }
+  if(t.id==="rv-text"){ const tx=textById(t.value); if(tx){ $("#rv-title").value=tx.title; $("#rv-level").value=tx.level; $("#rv-words").value=wordsOf(tx.body).length; reviewDraft.textId=tx.id; } else reviewDraft.textId=""; updateReviewKpis(); return; }
+  if(t.closest && t.closest(".modal") && /^rv-/.test(t.id||"")){ updateReviewKpis(); return; }
+  if(t.dataset.set==="voiceURI" || t.dataset.set==="autoCheck" || t.dataset.set==="record" || t.dataset.set==="lang"){ /* al bewaard via input */ }
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && $("#modal").innerHTML) closeModal(); });
+window.addEventListener("beforeunload", ()=>save());
+
+// Testhaak (alleen voor controle; doet niets in gewoon gebruik)
+window.__leesapp = {align, metrics, classify, summary, wordsOf, suggestStruik, Sync, get state(){return state;}};
+
+render();
+(async()=>{ if(await Sync.pullPakket()){ if(view.name==="home") render(); } Sync.flush(); })();
+</script>
+</body>
+</html>
